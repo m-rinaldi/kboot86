@@ -1,0 +1,9 @@
+megs: 32
+romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0x000000
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
+floppya: 1_44=floppy.img, status=inserted
+boot: floppy 
+log: output.log
+mouse: enabled=0
+clock: sync=realtime
+cpu: ips=1000000
