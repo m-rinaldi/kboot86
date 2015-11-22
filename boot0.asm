@@ -7,13 +7,12 @@ bits 16
 
 %include "bootloader.inc"
 
-DRIVE_NUM           equ     0
 FIRST_SECTOR2LOAD   equ     2   ; sectors start counting from 1, not 0
 NUM_SECTORS2LOAD    equ     8
 SECTOR_NUM_MAX      equ     (NUM_SECTORS2LOAD+FIRST_SECTOR2LOAD-1)
 SECTOR_SIZE         equ     512
 
-BUF_SEG              equ     0x9000 
+BUF_SEG              equ    (BL_STAGE1_ADDR/16)
 
 ; this code will be loaded by the BIOS at address 0x7c00 
 org 0x7c00
@@ -116,7 +115,7 @@ error:
 hang:
     jmp hang
 
-welcome_str         db  'First Stage Bootloader', 10, 13, 0
+welcome_str         db  '1st Stage Bootloader', 10, 13, 0
 init_drive_str      db  '  Initializating drive...', 0
 ok_str              db  'OK', 10, 13, 0
 error_str           db  'error', 10, 13, 0
