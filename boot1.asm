@@ -14,6 +14,7 @@ NUM_TRACKS                  equ     80
 
 org 0x0000
 
+; TODO change the address where the 2nd stage bootloader is loaded
     ; CS=BL_STAGE1 even if a third-party first stage bootloader was used
     jmp  (BL_STAGE1_ADDR/16):start
 start:
@@ -40,6 +41,51 @@ stack_top:
     call bios_print
     add  sp, 2
 
+    ; disable interrupts
+    cli
+
+    ; copy the loaded code to 0 address
+    ; ds:si src addr
+    ; es:di dst addr
+    ; set segments
+    xor  ax, ax
+    mov  es, ax
+    mov  ax, 0x1000
+    mov  ds, ax
+    ; set offsets
+    xor  si, si
+    xor  di, di
+    mov  cx, 9216/2     ; 9kiB to copy
+    rep  movsw
+    
+    ; restore DS in order to use the labels here
+    mov  ax, cs
+    mov  ds, ax
+
+    ; load IDT and GDT
+    lidt [idtr_48]
+    lgdt [gdtr_48]
+
+    ; TODO check first whether A20 is already enabled
+    
+    ; enable the A20 line
+    in   al, 0x92
+    or   al, 2
+    out  0x92, al
+
+    ; TODO re-program the 8259 PIC
+
+    ; disable the PIC
+    mov  al, 0xff
+    out  0xa1, al
+    out  0x21, al
+
+    ; enable PE bit
+    mov  ax, 0x0001
+    lmsw ax
+    ; far jump to switch to PM
+    jmp  0x0008:0x00000000   
+
 hang:
     jmp hang
 
@@ -50,7 +96,7 @@ hang:
 ; reads the whole track represented by [cylinder_num] and [head_num] in
 ; [buf_seg]:[buf_off] and updates [cylinder_num], [head_num] and [buf_off]
 ;-------------------------------------------------------------------------------
-cylinder_num    db  1
+cylinder_num    db  0
 head_num        db  1
 buf_seg         dw  0x1000
 buf_off         dw  0
@@ -70,23 +116,6 @@ load_track:
     cmp  al, NUM_SECTORS_PER_TRACK
     jne  error
 
-    ; update the buffer pointer
-    mov  ax, NUM_SECTORS_PER_TRACK
-    shl  ax, 9
-    mov  bx, [buf_off]
-    add  bx, ax
-    mov  [buf_off], bx
-
-    ; update the cylinder number
-    mov  al, [head_num]
-    cmp  al, 1
-    jne  preserve_cylinder_num
-    inc  byte [cylinder_num]
-preserve_cylinder_num:
-    ; update the head number (disk side)
-    mov  al, 1
-    sub  al, [head_num]
-    mov  [head_num], al
     ret
 
 error:
@@ -99,5 +128,30 @@ welcome_str     db '2nd Stage Bootloader', 10, 13, 0
 load_track_str  db 'loading track...', 0            
 error_str       db 'error', 0
 ok_str          db 'OK', 10, 13, 0
+
+; TODO alignment?
+idtr_48:
+    dw 0
+    dw 0
+    dw 0
+gdtr_48:
+    dw 0x0024       ; limit (24 bytes -> 3 descriptors)
+    dw gdt          ; base address 0x90000 + gdt
+    dw 0x0009
+
+; TODO alignment?
+gdt:
+    ; the null descriptor
+    dw 0, 0, 0, 0
+    ;--------------------
+    dw 0xffff
+    dw 0x0000
+    dw 0x9a00
+    dw 0x00cf
+    ;-------------------
+    dw 0xffff
+    dw 0x0000
+    dw 0x9200
+    dw 0x00cf
 
 times 4096-($-$$)   db 0
