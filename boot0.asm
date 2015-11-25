@@ -12,7 +12,7 @@ NUM_SECTORS2LOAD    equ     8
 SECTOR_NUM_MAX      equ     (NUM_SECTORS2LOAD+FIRST_SECTOR2LOAD-1)
 SECTOR_SIZE         equ     512
 
-BUF_SEG              equ    (BL_STAGE1_ADDR/16)
+BUF_SEG             equ     (BL_STAGE1_ADDR/16)
 
 ; this code will be loaded by the BIOS at address 0x7c00 
 org 0x7c00

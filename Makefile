@@ -4,7 +4,7 @@ AS = nasm
 
 all: floppy.img
 
-floppy.img : boot0.bin boot1.bin floppy.pad track0.pad  kboot86.bin
+floppy.img : boot0.bin boot1.bin floppy.pad track0.pad  kboot86.bin hdd.img
 	@echo -n generating floppy image...
 	@cat boot0.bin boot1.bin track0.pad kboot86.bin floppy.pad > floppy.img
 	@echo done

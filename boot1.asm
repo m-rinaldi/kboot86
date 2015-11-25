@@ -14,7 +14,6 @@ NUM_TRACKS                  equ     80
 
 org 0x0000
 
-; TODO change the address where the 2nd stage bootloader is loaded
     ; CS=BL_STAGE1 even if a third-party first stage bootloader was used
     jmp  (BL_STAGE1_ADDR/16):start
 start:
@@ -47,6 +46,8 @@ stack_top:
     ; copy the loaded code to 0 address
     ; ds:si src addr
     ; es:di dst addr
+
+
     ; set segments
     xor  ax, ax
     mov  es, ax
@@ -56,6 +57,7 @@ stack_top:
     xor  si, si
     xor  di, di
     mov  cx, 9216/2     ; 9kiB to copy
+    cld                 ; direction: increasing addresses
     rep  movsw
     
     ; restore DS in order to use the labels here
@@ -67,6 +69,7 @@ stack_top:
     lgdt [gdtr_48]
 
     ; TODO check first whether A20 is already enabled
+
     
     ; enable the A20 line
     in   al, 0x92
@@ -83,8 +86,9 @@ stack_top:
     ; enable PE bit
     mov  ax, 0x0001
     lmsw ax
+
     ; far jump to switch to PM
-    jmp  0x0008:0x00000000   
+    jmp  0x0008:0
 
 hang:
     jmp hang

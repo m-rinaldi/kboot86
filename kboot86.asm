@@ -15,12 +15,13 @@ org 0
     call scr_clear
     mov  eax, msg
     call scr_print
-    
+
 hang:
-    jmp hang   
+    jmp hang
+    
 
 %include "lib/video.asm"
 
-msg                 db  'Hello from Protected Mode', 0 
+msg                 db  'kboot86', 0 
 
 times 9216-($-$$)   db 0
