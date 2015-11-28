@@ -4,7 +4,7 @@ AS = nasm
 
 all: floppy.img
 
-floppy.img : boot0.bin boot1.bin floppy.pad track0.pad  kboot86.bin hdd.img
+floppy.img : boot0.bin boot1.bin floppy.pad track0.pad  kboot86.bin
 	@echo -n generating floppy image...
 	@cat boot0.bin boot1.bin track0.pad kboot86.bin floppy.pad > floppy.img
 	@echo done
@@ -28,9 +28,10 @@ hdd.pad :
 hdd_sector.bin : hdd_sector.asm
 	@$(AS) $< -f bin -o $@
 
-kboot86.bin : kboot86.asm
+kboot86.bin : kboot86.S drivers/vga.S
 	@echo -n "compiling the bootloader: $<..."
-	@$(AS) $< -f bin -o $@
+	~/opt/cross/bin/i686-elf-as kboot86.S drivers/vga.S -o kboot86.o --warn
+	~/opt/cross/bin/i686-elf-ld -T kboot86.ld -o kboot86.bin kboot86.o
 	@echo done
 
 boot1.bin : boot1.asm
@@ -45,5 +46,5 @@ boot0.bin : boot0.asm
 
 clean:
 	@echo -n cleaning...
-	@rm -f *.bin *.pad *.img *.log
+	@rm -f *.bin *.o *.pad *.img *.log
 	@echo done

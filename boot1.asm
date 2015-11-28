@@ -88,7 +88,7 @@ stack_top:
     lmsw ax
 
     ; far jump to switch to PM
-    jmp  0x0008:0
+    jmp  0x0008:0               ; index = 1 -> 2nd entry in the GDT
 
 hang:
     jmp hang
@@ -141,7 +141,7 @@ idtr_48:
 gdtr_48:
     dw 0x0024       ; limit (24 bytes -> 3 descriptors)
     dw gdt          ; base address 0x90000 + gdt
-    dw 0x0009
+    dw 0x0009       ; TODO make this position-independent
 
 ; TODO alignment?
 gdt:

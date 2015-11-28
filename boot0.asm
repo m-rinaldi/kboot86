@@ -2,7 +2,7 @@
 ; First Stage Bootloader
 ; Jorge Rinaldi <jrg.rinaldi@gmail.com>
 ;-------------------------------------------------------------------------------
-
+; TODO use value the BIOS returns in DL (drive number) instead of DRIVE_NUM
 bits 16
 
 %include "bootloader.inc"
