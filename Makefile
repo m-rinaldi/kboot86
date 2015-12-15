@@ -4,15 +4,18 @@ AS = nasm
 
 all: floppy.img
 
-floppy.img : boot0.bin boot1.bin floppy.pad track0.pad  kboot86.bin
+floppy.img : boot0.bin boot1.bin floppy.pad track0.pad  track1.pad kboot86.bin
 	@echo -n generating floppy image...
-	@cat boot0.bin boot1.bin track0.pad kboot86.bin floppy.pad > floppy.img
+	@cat boot0.bin boot1.bin track0.pad kboot86.bin track1.pad floppy.pad > floppy.img
 	@echo done
 
 # kboot86.bin <--> track1.pad
-floppy.pad track0.pad :
+floppy.pad track0.pad track1.pad : kboot86.bin
 	@echo -n "generating the padding for 1st track of the floppy..."
 	@dd if=/dev/zero of=./track0.pad bs=512 count=9 2>/dev/null
+	@echo done
+	@echo -n "generating the padding for 2nd track of the floppy..."
+	@dd if=/dev/zero of=./track1.pad bs=1 count=$$(expr 9216 - $$(stat -c %s ./kboot86.bin)) 2>/dev/null
 	@echo done
 	@echo -n "generating the padding for the floppy image..."
 	@dd if=/dev/zero of=./floppy.pad bs=512 count=2844 2>/dev/null
