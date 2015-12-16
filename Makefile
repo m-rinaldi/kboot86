@@ -1,4 +1,15 @@
-AS = nasm
+CC = ~/opt/cross/bin/i686-elf-gcc
+LD = ~/opt/cross/bin/i686-elf-ld
+AS = ~/opt/cross/bin/i686-elf-as
+CFLAGS = -c -ffreestanding -Wall
+INCLUDES = include/
+
+
+DRIVERS = $(wildcard drivers/%.c)
+
+export CC
+export CFLAGS
+export LD
 
 .PHONY: all clean
 
@@ -21,32 +32,36 @@ floppy.pad track0.pad track1.pad : kboot86.bin
 	@echo done
 
 hdd.img : hdd_sector.bin hdd.pad
-	cat hdd_sector.bin hdd.pad > $@
+	@cat hdd_sector.bin hdd.pad > $@
 
 hdd.pad : 
-	dd if=/dev/zero of=./hdd.pad bs=512 \
+	@dd if=/dev/zero of=./hdd.pad bs=512 \
         count=$$(expr 1024 '*' 4 '*' 16 - 1)
 
 hdd_sector.bin : hdd_sector.asm
-	@$(AS) $< -f bin -o $@
+	@nasm $< -f bin -o $@
 
-kboot86.bin : kboot86.S drivers/vga.S
-	@echo -n "compiling the bootloader: $<..."
-	~/opt/cross/bin/i686-elf-as kboot86.S drivers/vga.S -o kboot86.o --warn
-	~/opt/cross/bin/i686-elf-ld -T kboot86.ld -o kboot86.bin kboot86.o
-	@echo done
+kboot86.bin : _kboot86.o drivers/drivers.o
+	@$(LD) -T kboot86.ld -o kboot86.bin _kboot86.o drivers/drivers.o
+
+drivers/drivers.o : $(DRIVERS)
+	@make -C drivers/
+
+_kboot86.o : _kboot86.S
+	@$(AS) -c $< -o $@ 
 
 boot1.bin : boot1.asm
 	@echo -n "compiling the 2nd stage bootloader: $<..."
-	@$(AS) $< -f bin -o $@
+	@nasm $< -f bin -o $@
 	@echo done
 
 boot0.bin : boot0.asm
 	@echo -n "compiling the 1st stage bootloader: $<..."
-	@$(AS) $< -f bin -o $@
+	@nasm $< -f bin -o $@
 	@echo done
 
 clean:
 	@echo -n cleaning...
+	@make -C drivers/ clean
 	@rm -f *.bin *.o *.pad *.img *.log
 	@echo done

@@ -14,12 +14,11 @@ _start:
     # set up the stack
     movl    $0x00080000, %esp
 
-    call    _vga_init
-    call    _vga_clear
-
-    push    $msg
-    call    _vga_print
+    call    console_init
+    pushl   $msg
+    call    console_puts
     addl    $4, %esp
+
 hang:
     jmp hang
 
