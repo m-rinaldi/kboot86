@@ -43,13 +43,12 @@ stack_top:
     ; disable interrupts
     cli
 
-    ; copy the loaded code to 0 address
+    ; relocate the loaded code
     ; ds:si src addr
     ; es:di dst addr
 
-
     ; set segments
-    xor  ax, ax
+    mov  ax, 0x7e0
     mov  es, ax
     mov  ax, 0x1000
     mov  ds, ax
@@ -88,7 +87,7 @@ stack_top:
     lmsw ax
 
     ; far jump to switch to PM
-    jmp  0x0008:0               ; index = 1 -> 2nd entry in the GDT
+    jmp  0x0008:0x7e00              ; index = 1 -> 2nd entry in the GDT
 
 hang:
     jmp hang
@@ -139,23 +138,29 @@ idtr_48:
     dw 0
     dw 0
 gdtr_48:
-    dw 0x0024       ; limit (24 bytes -> 3 descriptors)
+    dw 24           ; limit (24 bytes -> 3 descriptors)
     dw gdt          ; base address 0x90000 + gdt
-    dw 0x0009       ; TODO make this position-independent
+    dw 0x0009       ; TODO make this position-independent (segment from BL_STAGE1_ADDR)
 
 ; TODO alignment?
 gdt:
     ; the null descriptor
     dw 0, 0, 0, 0
     ;--------------------
-    dw 0xffff
-    dw 0x0000
-    dw 0x9a00
-    dw 0x00cf
+    ; code segment descriptor
+    dw 0xffff   ; limit  0:15
+    dw 0x0000   ; base   0:15  
+    db 0x00     ; base  16:23
+    db 0x9a     ; acces byte
+    db 0xcf     ; flags, limit 16:19
+    db 0x00     ; base  24:31
     ;-------------------
+    ; data segment descriptor
     dw 0xffff
     dw 0x0000
-    dw 0x9200
-    dw 0x00cf
+    db 0x00
+    db 0x92
+    db 0xcf
+    db 0x00
 
 times 4096-($-$$)   db 0
