@@ -138,7 +138,7 @@ idtr_48:
     dw 0
     dw 0
 gdtr_48:
-    dw 24           ; limit (24 bytes -> 3 descriptors)
+    dw 23           ; limit (24 bytes -> 3 descriptors)
     dw gdt          ; base address 0x90000 + gdt
     dw 0x0009       ; TODO make this position-independent (segment from BL_STAGE1_ADDR)
 
