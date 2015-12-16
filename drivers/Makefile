@@ -2,11 +2,13 @@ INCLUDE = ../include/
 SRC = $(wildcard *.c)
 OBJ = $(patsubst %.c, %.o, $(SRC))
 
+TARGET = drivers.o
+
 .PHONY: all clean
 
-all: drivers.o
+all: $(TARGET)
 
-drivers.o : $(OBJ)
+$(TARGET) : $(OBJ)
 	@echo -n "  generating $@..."
 	@$(LD) --relocatable $(OBJ) -o $@
 	@echo done

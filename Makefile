@@ -1,11 +1,10 @@
 CC = ~/opt/cross/bin/i686-elf-gcc
 LD = ~/opt/cross/bin/i686-elf-ld
 AS = ~/opt/cross/bin/i686-elf-as
-CFLAGS = -c -ffreestanding -Wall
+CFLAGS = -c -ffreestanding -Wall -Wextra
 INCLUDES = include/
 
-
-DRIVERS = $(wildcard drivers/%.c)
+OBJ = drivers/drivers.o lib/lib.o
 
 export CC
 export CFLAGS
@@ -41,11 +40,14 @@ hdd.pad :
 hdd_sector.bin : hdd_sector.asm
 	@nasm $< -f bin -o $@
 
-kboot86.bin : _kboot86.o drivers/drivers.o
+kboot86.bin : _kboot86.o $(OBJ)
 	@$(LD) -T kboot86.ld -o kboot86.bin _kboot86.o drivers/drivers.o
 
-drivers/drivers.o : $(DRIVERS)
+drivers/drivers.o : 
 	@make -C drivers/
+
+lib/lib.o :
+	@make -C lib/
 
 _kboot86.o : _kboot86.S
 	@$(AS) -c $< -o $@ 
@@ -63,5 +65,5 @@ boot0.bin : boot0.asm
 clean:
 	@echo -n cleaning...
 	@make -C drivers/ clean
-	@rm -f *.bin *.o *.pad *.img *.log
+	@rm -f *.bin *.o *.pad floppy.img *.log
 	@echo done

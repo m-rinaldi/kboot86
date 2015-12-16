@@ -19,6 +19,14 @@ _start:
     call    console_puts
     addl    $4, %esp
 
+    pushl   $0x28
+    pushl   $0x20
+    call    pic_remap
+    addl    $8, %esp
+
+    pushl   $msg
+    call    console_puts
+    addl    $4, %esp
 hang:
     jmp hang
 

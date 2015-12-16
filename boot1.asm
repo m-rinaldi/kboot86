@@ -75,8 +75,6 @@ stack_top:
     or   al, 2
     out  0x92, al
 
-    ; TODO re-program the 8259 PIC
-
     ; disable the PIC
     mov  al, 0xff
     out  0xa1, al
