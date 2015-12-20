@@ -1,13 +1,13 @@
 /*
  * IDT: Interrupt Description Table
  */
-
+#include <idt.h>
+#include <isr.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <sys/types.h>
-#include <kernel/isr.h>
 
 #define IDT_CS      0x0008
-#define NUM_ISRS    0x20
+#define NUM_ISRS    0x100
 
 // mapping of the IDTR processor register
 typedef struct {
@@ -39,13 +39,11 @@ typedef struct {
 } __attribute__((packed)) idt_gate_t;
 
 
-static struct {
-    volatile idt_gate_t *idt;
-    void (*handlers[NUM_ISRS])(isr_saved_regs_t);
-    
-} _;
+typedef struct {
+    idt_gate_t gate[256];
+} __attribute__((packed)) idt_t;
 
-
+static volatile idt_t *_;
 
 #define GATE_TRAP   0
 #define GATE_INTR   1
@@ -63,7 +61,7 @@ int _set_gate(unsigned int index,
     if (privi_level >= 4)
         return 1;
 
-    // TODO move this inside the switch,i ntrs & traps have a lot in common
+    // TODO move this inside the switch, intrs & traps have a lot in common
     gate.offset_lo  = 0xffff & (uint32_t) isr;
     gate.offset_hi  = (0xffff0000 & (uint32_t) isr) >> 16;
     gate.selector   = selector;
@@ -90,7 +88,7 @@ int _set_gate(unsigned int index,
     gate.attr.s     = 0;
 
     // place the gate in the IDT
-    _.idt[index] = gate;    
+    _->gate[index] = gate;    
 
     return 0;
 }
@@ -129,13 +127,23 @@ int idt_init(uint32_t base)
     idtr_t  idtr;
 
     idtr.base = base;
-    idtr.limit = NUM_ISRS - 1;
+    idtr.limit = NUM_ISRS * sizeof(idt_gate_t) - 1;
 
+    _ = (idt_t *) base;
+
+    // set up the whole IDT with default entries
     {
         int i;
         for (i = 0; i < NUM_ISRS; i++)
-            _.handlers[i] = NULL;
+            ; // TODO
     }
+
+    // XXX
+    {
+        extern void dummy_isr(void);
+        idt_set_intr_gate(33, dummy_isr);
+    }
+
     // TODO
 
     _set_idtr(idtr);

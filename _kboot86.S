@@ -27,6 +27,24 @@ _start:
     pushl   $msg
     call    console_puts
     addl    $4, %esp
+
+    pushl   $0
+    call    idt_init
+    addl    $4, %esp
+
+    pushl   $msg
+    call    console_puts
+    addl    $4, %esp
+
+    sti
+
+    int     $33
+
+    pushl   $msg
+    call    console_puts
+    addl    $4, %esp
+
+    int     $33
 hang:
     jmp hang
 

@@ -7,6 +7,7 @@ INCLUDES = include/
 OBJ = drivers/drivers.o lib/lib.o
 
 export CC
+export AS
 export CFLAGS
 export LD
 
@@ -41,7 +42,7 @@ hdd_sector.bin : hdd_sector.asm
 	@nasm $< -f bin -o $@
 
 kboot86.bin : _kboot86.o $(OBJ)
-	@$(LD) -T kboot86.ld -o kboot86.bin _kboot86.o drivers/drivers.o
+	@$(LD) -T kboot86.ld -o kboot86.bin _kboot86.o $(OBJ)
 
 drivers/drivers.o : 
 	@make -C drivers/
@@ -65,5 +66,6 @@ boot0.bin : boot0.asm
 clean:
 	@echo -n cleaning...
 	@make -C drivers/ clean
+	@make -C lib/ clean
 	@rm -f *.bin *.o *.pad floppy.img *.log
 	@echo done
