@@ -57,6 +57,14 @@ void vga_scroll_down(void)
         vga_writec_attr_xy(' ', ATTR_BLACK_ON_BLACK, i, VGA_NUM_ROWS - 1);
 }
 
+void vga_clear_row(unsigned int y)
+{
+    unsigned int i;
+
+    for (i = 0; i < VGA_NUM_COLS; i++)
+        vga_writec_attr_xy(' ', ATTR_BLACK_ON_BLACK, i, y); 
+}
+
 void vga_clear(void)
 {
     unsigned int x, y;

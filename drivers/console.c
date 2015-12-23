@@ -23,6 +23,24 @@ int console_init(void)
     return 0;
 }
 
+// line feed
+static void _lf(void)
+{
+    _.curs_x = 0;
+    if (VGA_NUM_ROWS <= ++_.curs_y) {
+        vga_scroll_down();
+
+        _.curs_y = VGA_NUM_COLS - 1;
+    }
+}
+
+// carriage return
+static void _cr(void)
+{
+    _.curs_x = 0;
+    vga_clear_row(_.curs_y);
+}
+
 // does update the position of the cursor
 static inline
 void _putc_attr(char c, uint8_t attr)
@@ -31,7 +49,7 @@ void _putc_attr(char c, uint8_t attr)
 
     // update cursor 
     _.curs_x = (_.curs_x + 1) % VGA_NUM_COLS;
-    if (!_.curs_x && VGA_NUM_ROWS == ++_.curs_y) {
+    if (!_.curs_x && VGA_NUM_ROWS <= ++_.curs_y) {
         vga_scroll_down();
 
         // set cursor position
@@ -43,7 +61,18 @@ void _putc_attr(char c, uint8_t attr)
 static inline
 void _putc(char c)
 {
-   _putc_attr(c, _.attr);
+    switch (c) {
+        case '\n':
+            _lf();
+            break;
+
+        case '\r':
+            _cr();
+            break;
+
+        default:  
+            _putc_attr(c, _.attr);
+    }
 }
 
 void console_clear(void)
@@ -51,6 +80,7 @@ void console_clear(void)
     vga_clear();
     _.curs_x = _.curs_y = 0;
 }
+
 
 int console_puts(const char *s)
 {

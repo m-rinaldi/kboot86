@@ -44,6 +44,8 @@ _start:
     call    console_puts
     addl    $4, %esp
 
+    jmp     main
+
     int     $33
 hang:
     jmp hang

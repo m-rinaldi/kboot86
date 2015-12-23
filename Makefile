@@ -4,7 +4,7 @@ AS = ~/opt/cross/bin/i686-elf-as
 CFLAGS = -c -ffreestanding -Wall -Wextra
 INCLUDES = include/
 
-OBJ = drivers/drivers.o lib/lib.o
+OBJ = drivers/drivers.o lib/lib.o main.o
 
 export CC
 export AS
@@ -49,6 +49,9 @@ drivers/drivers.o :
 
 lib/lib.o :
 	@make -C lib/
+
+main.o : main.c
+	$(CC) -c $< $(CFLAGS) -I $(INCLUDES) -o $@
 
 _kboot86.o : _kboot86.S
 	@$(AS) -c $< -o $@ 
