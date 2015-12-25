@@ -54,7 +54,7 @@ void _putc_attr(char c, uint8_t attr)
 
         // set cursor position
         _.curs_x = 0;
-        _.curs_y = VGA_NUM_COLS - 1;
+        _.curs_y = VGA_NUM_ROWS - 1;
     }
 }
 

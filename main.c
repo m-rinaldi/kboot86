@@ -20,6 +20,7 @@ void main(void)
 
     //intr(33);
 
+    pic_enable();
     intr_enable();
 
     while (1)

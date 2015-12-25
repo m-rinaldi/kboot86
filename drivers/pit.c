@@ -111,8 +111,17 @@ int pit_init(void)
 
 void pit_isr(void)
 {
-    if (++_num_ticks % 32 == 31)
-        console_puts("X");
+    const char *s = "abcdefghijklmnoprstouvwxyzABCDEFGHIJKLMNOPQRSTOUV"
+        "WXYZ_0123456789-.";
+    static int i;
+    char str[2];
+
+    if (++_num_ticks % 4 == 3) {
+        str[0] = s[i];
+        str[1] = '\0';
+        i = (i + 1) % strlen(s);
+        console_puts(str);
+    }
     pic_send_eoi(PIT_IRQ_NUM);
     return;     
 }
