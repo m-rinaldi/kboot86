@@ -1,6 +1,7 @@
 #include <pic.h>
-#include <x86_io.h>
+#include <io.h>
 #include <stdint.h>
+#include <console.h>
 
 #define MASTER      0x20
 #define SLAVE       0xa0
@@ -25,37 +26,37 @@
 static inline
 void _master_send_cmd(uint8_t cmd)
 {
-    x86_outb(MASTER_CMD, cmd);
+    outb(MASTER_CMD, cmd);
 }
 
 static inline
 void _slave_send_cmd(uint8_t cmd)
 {
-    x86_outb(SLAVE_CMD, cmd);
+    outb(SLAVE_CMD, cmd);
 }
 
 static inline
 uint8_t _master_get_data(void)
 {
-    return x86_inb(MASTER_DATA); 
+    return inb(MASTER_DATA); 
 }
 
 static inline
 uint8_t _slave_get_data(void)
 {
-    return x86_inb(SLAVE_DATA);
+    return inb(SLAVE_DATA);
 }
 
 static inline
 void _master_set_data(uint8_t data)
 {
-    x86_outb(MASTER_DATA, data);
+    outb(MASTER_DATA, data);
 }
 
 static inline
 void _slave_set_data(uint8_t data)
 {
-    x86_outb(SLAVE_DATA, data);
+    outb(SLAVE_DATA, data);
 }
 
 void pic_remap(uint8_t master_off, uint8_t slave_off)
@@ -87,8 +88,8 @@ void pic_remap(uint8_t master_off, uint8_t slave_off)
 
 void pic_enable(void)
 {
-    x86_outb(MASTER_DATA, 0);
-    x86_outb(SLAVE_DATA, 0);
+    outb(MASTER_DATA, 0);
+    outb(SLAVE_DATA, 0);
 }
 
 void pic_send_eoi(uint8_t irq)

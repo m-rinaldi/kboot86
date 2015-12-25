@@ -15,7 +15,7 @@ $(TARGET) : $(OBJ)
 	@echo done
 
 %.o : %.S
-	@echo -n "  compiling $<..."
+	@echo -n "  assembling $<..."
 	@$(AS) $< -o $@
 	@echo done 
 

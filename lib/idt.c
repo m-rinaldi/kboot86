@@ -3,11 +3,13 @@
  */
 #include <idt.h>
 #include <isr.h>
+#include <intr.h>
+#include <eflags.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#define IDT_CS      0x0008
-#define NUM_ISRS    0x100
+#define IDT_CS              0x0008
+#define IDT_NUM_GATES_MAX   0x100
 
 // mapping of the IDTR processor register
 typedef struct {
@@ -55,7 +57,7 @@ int _set_gate(unsigned int index,
 {
     idt_gate_t gate;
 
-    if (index >= NUM_ISRS)
+    if (index >= IDT_NUM_GATES_MAX)
         return 1;
 
     if (privi_level >= 4)
@@ -109,32 +111,53 @@ int idt_set_task_gate(unsigned int index, void (*isr)(void))
 }
 
 
-
-static inline idtr_t _get_idtr(void)
+static inline
+idtr_t _get_idtr(void)
 {
     idtr_t idtr;
-    asm volatile ("sidt %0" : : "m" (idtr));
+    asm volatile
+        (
+            "# _get_idtr()\n\t"
+            "sidt %0\n\t"
+            :   // no output operands
+            :   "m" (idtr)
+            :   "memory"
+        );
     return idtr;
 }
 
-static inline void _set_idtr(idtr_t idtr)
+static inline
+void _set_idtr(idtr_t idtr)
 {
-    asm volatile ("lidt %0" : : "m" (idtr)); 
+    asm volatile
+        (
+            "# _set_idtr()\n\t"
+            "lidt %0\n\t"
+            :   // no output operands
+            : "m" (idtr)
+            : "memory"
+        ); 
 }
 
 int idt_init(uint32_t base)
 {
     idtr_t  idtr;
+    bool IF;
+
+    // save IF from FLAGS
+    IF = eflags_get_IF();
+    // disable IF in FLAGS
+    intr_disable();
 
     idtr.base = base;
-    idtr.limit = NUM_ISRS * sizeof(idt_gate_t) - 1;
+    idtr.limit = IDT_NUM_GATES_MAX * sizeof(idt_gate_t) - 1;
 
     _ = (idt_t *) base;
 
     // set up the whole IDT with default entries
     {
         int i;
-        for (i = 0; i < NUM_ISRS; i++)
+        for (i = 0; i < IDT_NUM_GATES_MAX; i++)
             ; // TODO
     }
 
@@ -147,6 +170,9 @@ int idt_init(uint32_t base)
     // TODO
 
     _set_idtr(idtr);
+
+    // restore saved IF
+    eflags_set_IF(IF);
 
     return 0;
 }

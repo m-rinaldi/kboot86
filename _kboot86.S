@@ -14,39 +14,7 @@ _start:
     # set up the stack
     movl    $0x00080000, %esp
 
-    call    console_init
-    pushl   $msg
-    call    console_puts
-    addl    $4, %esp
-
-    pushl   $0x28
-    pushl   $0x20
-    call    pic_remap
-    addl    $8, %esp
-
-    pushl   $msg
-    call    console_puts
-    addl    $4, %esp
-
-    pushl   $0
-    call    idt_init
-    addl    $4, %esp
-
-    pushl   $msg
-    call    console_puts
-    addl    $4, %esp
-
-    sti
-
-    int     $33
-
-    pushl   $msg
-    call    console_puts
-    addl    $4, %esp
-
     jmp     main
-
-    int     $33
 hang:
     jmp hang
 

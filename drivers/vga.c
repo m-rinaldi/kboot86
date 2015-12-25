@@ -1,6 +1,6 @@
 #include <vga.h>
 #include <stdint.h>
-#include <x86_io.h>
+#include <io.h>
 
 #define BASE_ADDR               0xb8000
 
@@ -36,10 +36,10 @@ void vga_draw_cursor_xy(unsigned int x, unsigned int y)
 {
     uint16_t idx = _xy2idx(x, y);
 
-    x86_outb(0x3d4, 0x0f);
-    x86_outb(0x3d5, (uint8_t) (0x00ff & idx));
-    x86_outb(0x3d4, 0x0e);
-    x86_outb(0x3d5, (uint8_t) ((0xff00 & idx) >> 8));
+    outb(0x3d4, 0x0f);
+    outb(0x3d5, (uint8_t) (0x00ff & idx));
+    outb(0x3d4, 0x0e);
+    outb(0x3d5, (uint8_t) ((0xff00 & idx) >> 8));
 }
 
 // TODO _hide_cursor()

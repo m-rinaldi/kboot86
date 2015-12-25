@@ -1,6 +1,7 @@
 INCLUDE = ../include/
 SRC = $(wildcard *.c)
 OBJ = $(patsubst %.c, %.o, $(SRC))
+OBJ += $(patsubst %.S, %.o, $(wildcard *.S))
 
 TARGET = drivers.o
 
@@ -16,7 +17,13 @@ $(TARGET) : $(OBJ)
 %.o : %.c
 	@echo -n "  compiling $<..."
 	@$(CC) $(CFLAGS) -I $(INCLUDE) $< -o $@
-	@echo done 
+	@echo done
+
+%.o : %.S
+	@echo -n "  assembling $<..."
+	@$(AS) $< -o $@
+	@echo done
+	
 
 clean:
 	@echo -n "  cleaning..."
