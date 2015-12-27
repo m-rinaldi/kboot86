@@ -1,8 +1,9 @@
-// TODO tabs were 3 and they shold be 4
 #include <console.h>
 #include <vga.h>
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
 
 // attributes
 #define ATTR_BLACK_ON_BLACK      0x00
@@ -10,15 +11,39 @@
 #define ATTR_GREEN_ON_BLACK      0x0a
 #define ATTR_WHITE_ON_BLUE       0x1f
 
+#define IBUF_SIZE   32
 static struct {
-    const uint8_t  attr;
+    uint8_t     attr;
 
-    uint8_t  curs_x;
-    uint8_t  curs_y;
-} _ = {ATTR_GREEN_ON_BLACK, 0, 0};
+    uint8_t     curs_x;
+    uint8_t     curs_y;
+
+    volatile bool   line_completed;
+    char            ibuf[IBUF_SIZE];
+    volatile size_t iidx;  
+} _;
+
+static inline
+bool _ibuf_is_full(void)
+{
+    return IBUF_SIZE == _.iidx;
+}
+
+static inline
+void _reset_ibuf(void)
+{
+    _.iidx = 0;
+    _.line_completed = false;
+} 
 
 int console_init(void)
 {
+    _.attr = ATTR_GREEN_ON_BLACK;
+    _.curs_x = _.curs_y = 0;    
+
+    _.line_completed = false;
+    _.iidx = 0;
+
     console_clear();
     return 0;
 }
@@ -55,6 +80,8 @@ void _putc_attr(char c, uint8_t attr)
         // set cursor position
         _.curs_x = 0;
         _.curs_y = VGA_NUM_ROWS - 1;
+    
+        vga_draw_cursor_xy(_.curs_x, _.curs_y);
     }
 }
 
@@ -95,3 +122,38 @@ int console_puts(const char *s)
 
     return i;
 }
+
+void console_put_ibuf(char c)
+{
+    if (_ibuf_is_full())
+        return;
+
+    _.ibuf[_.iidx++] = c;
+   
+    if ('\n' == c)
+        _.line_completed = true;
+    _putc(c);
+}
+
+int console_get_line(char *buf, size_t *buf_len)
+{
+    size_t len;
+
+    if (!buf || !buf_len)
+        return 1;
+
+    if (!*buf_len)
+        return 0;    
+
+    while (!_.line_completed)
+        ;
+
+    len = *buf_len < _.iidx ? *buf_len : _.iidx;
+    *buf_len = len;
+    memcpy(buf, _.ibuf, len);
+
+    _reset_ibuf();
+
+    return 0;
+}
+

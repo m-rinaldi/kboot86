@@ -39,7 +39,7 @@ void vga_draw_cursor_xy(unsigned int x, unsigned int y)
     outb(0x3d4, 0x0f);
     outb(0x3d5, (uint8_t) (0x00ff & idx));
     outb(0x3d4, 0x0e);
-    outb(0x3d5, (uint8_t) ((0xff00 & idx) >> 8));
+    outb(0x3d5, (uint8_t) (0x00ff & (idx >> 8)));
 }
 
 // TODO _hide_cursor()

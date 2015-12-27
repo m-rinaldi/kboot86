@@ -1,0 +1,1 @@
+../opt/cross/bin/i686-elf-objdump -D -b binary -mi386 --adjust-vma=0x7e00 kboot86.bin

@@ -74,10 +74,8 @@ void keyboard_isr(void)
 
     if (!make)
         goto keyboard_isr_end;
-    
-    _keymap[scancode];
-    // XXX
-    console_puts("< key pressed > ");
+   
+    console_put_ibuf(_keymap[scancode]);
 
 keyboard_isr_end:
     _.shift = _.lshift || _.rshift;
