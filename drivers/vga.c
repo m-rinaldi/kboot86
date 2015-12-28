@@ -4,7 +4,8 @@
 
 #define BASE_ADDR               0xb8000
 
-#define ATTR_BLACK_ON_BLACK     0x00
+// XXX it affects the cursor as well
+#define ATTR_GREEN_ON_BLACK     0x0a
 
 static volatile uint16_t * const _mem = (uint16_t *) BASE_ADDR;
     
@@ -53,8 +54,7 @@ void vga_scroll_down(void)
         _mem[i] = _mem[i+VGA_NUM_COLS]; 
 
     // clear the undermost row
-    for (i = 0; i < VGA_NUM_COLS; i++)
-        vga_writec_attr_xy(' ', ATTR_BLACK_ON_BLACK, i, VGA_NUM_ROWS - 1);
+    vga_clear_row(VGA_NUM_ROWS - 1);
 }
 
 void vga_clear_row(unsigned int y)
@@ -62,16 +62,15 @@ void vga_clear_row(unsigned int y)
     unsigned int i;
 
     for (i = 0; i < VGA_NUM_COLS; i++)
-        vga_writec_attr_xy(' ', ATTR_BLACK_ON_BLACK, i, y); 
+        vga_writec_attr_xy(' ', ATTR_GREEN_ON_BLACK, i, y); 
 }
 
 void vga_clear(void)
 {
-    unsigned int x, y;
+    unsigned int y;
 
     // TODO  check that the whole screen is being written by changing the
     //       background color
     for (y = 0; y < VGA_NUM_ROWS; y++)
-        for (x = 0; x < VGA_NUM_COLS; x++)
-            vga_writec_attr_xy('X', ATTR_BLACK_ON_BLACK, x, y);
+        vga_clear_row(y);
 }

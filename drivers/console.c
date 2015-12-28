@@ -80,8 +80,6 @@ void _putc_attr(char c, uint8_t attr)
         // set cursor position
         _.curs_x = 0;
         _.curs_y = VGA_NUM_ROWS - 1;
-    
-        vga_draw_cursor_xy(_.curs_x, _.curs_y);
     }
 }
 
@@ -118,6 +116,8 @@ int console_puts(const char *s)
 
     for (i = 0; s[i]; i++)
         _putc(s[i]);
+
+    // update the cursor after writing the whole string
     vga_draw_cursor_xy(_.curs_x, _.curs_y);
 
     return i;
@@ -133,6 +133,7 @@ void console_put_ibuf(char c)
     if ('\n' == c)
         _.line_completed = true;
     _putc(c);
+    vga_draw_cursor_xy(_.curs_x, _.curs_y);
 }
 
 int console_get_line(char *buf, size_t *buf_len)
