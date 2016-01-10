@@ -30,6 +30,12 @@ bool _ibuf_is_full(void)
 }
 
 static inline
+bool _ibuf_is_empty(void)
+{
+    return !_.iidx;
+}
+
+static inline
 void _reset_ibuf(void)
 {
     _.iidx = 0;
@@ -49,7 +55,7 @@ int console_init(void)
 }
 
 // line feed
-static void _lf(void)
+static void _line_feed(void)
 {
     _.curs_x = 0;
     if (VGA_NUM_ROWS <= ++_.curs_y) {
@@ -59,12 +65,12 @@ static void _lf(void)
     }
 }
 
-// carriage return
-static void _cr(void)
+// kill control character
+static void _kill(void)
 {
-    _.curs_x = 0;
-    vga_clear_row(_.curs_y);
+    // TODO call _del_ibuf() until ibuf is empty 
 }
+
 
 // does update the position of the cursor
 static inline
@@ -83,21 +89,30 @@ void _putc_attr(char c, uint8_t attr)
     }
 }
 
+static int _del_ibuf(void);
+
+// returns zero if char must not be printed on the screen
 static inline
-void _putc(char c)
+int _putc(char c)
 {
     switch (c) {
         case '\n':
-            _lf();
+            _line_feed();
             break;
 
         case '\r':
-            _cr();
+            _kill();
+            break;
+
+        case '\b':
+            _del_ibuf();
             break;
 
         default:  
             _putc_attr(c, _.attr);
+            return 1;
     }
+    return 0;
 }
 
 void console_clear(void)
@@ -128,12 +143,32 @@ void console_put_ibuf(char c)
     if (_ibuf_is_full())
         return;
 
-    _.ibuf[_.iidx++] = c;
-   
     if ('\n' == c)
         _.line_completed = true;
-    _putc(c);
+
+    if (_putc(c))
+        _.ibuf[_.iidx++] = c;
+
     vga_draw_cursor_xy(_.curs_x, _.curs_y);
+}
+
+static int _del_ibuf(void)
+{
+    // TODO source for race conditions?
+
+    if (_ibuf_is_empty())
+        return -1;
+
+    _.iidx--;
+
+    // TODO update _.curs_x properly
+    // TODO what if line wrap around (if _.curs_x = 0 before decrement)
+    _.curs_x--;
+    _putc(' ');
+    _.curs_x--;
+
+    vga_draw_cursor_xy(_.curs_x, _.curs_y);
+    return 0;
 }
 
 int console_get_line(char *buf, size_t *buf_len)
@@ -157,4 +192,5 @@ int console_get_line(char *buf, size_t *buf_len)
 
     return 0;
 }
+
 

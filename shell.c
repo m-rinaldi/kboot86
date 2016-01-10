@@ -16,6 +16,7 @@ void shell_do(void)
         str[len] = '\0';
 
         console_puts(str);
+        console_puts("\n");
         console_puts("-> ");
     }
 }

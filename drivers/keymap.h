@@ -21,7 +21,7 @@ static const char _keymap[] = {
     ' ',            /* 0x0b */
     ' ',            /* 0x0c */
     ' ',            /* 0x0d */
-    127,            /* 0x0e */  /* Backspace */
+    127,            /* 0x0e */  /* Backspace (DEL) */
     ' ',            /* 0x0f */
     'q',            /* 0x10 */
     'w',            /* 0x11 */

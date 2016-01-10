@@ -75,7 +75,23 @@ void keyboard_isr(void)
     if (!make)
         goto keyboard_isr_end;
    
-    console_put_ibuf(_keymap[scancode]);
+    {
+        char c;
+
+        // map control characters 
+        switch (c = _keymap[scancode]) {
+            case '\r':
+                if (_.ctrl)
+                    c = '\r';
+                break;
+
+            case 127:   // DEL
+                c = '\b';
+                break;
+        }
+    
+        console_put_ibuf(c);
+    }
 
 keyboard_isr_end:
     _.shift = _.lshift || _.rshift;
