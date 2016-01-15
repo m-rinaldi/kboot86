@@ -35,6 +35,7 @@ stack_top:
     add  sp, 2
 
     call load_track
+    call load_track
 
     push ok_str
     call bios_print
@@ -55,7 +56,9 @@ stack_top:
     ; set offsets
     xor  si, si
     xor  di, di
-    mov  cx, 9216/2     ; 9kiB to copy
+    
+    ; TODO make dependent from the number of calls to load_track
+    mov  cx, 18432/2    ; 18kiB to copy
     cld                 ; direction: increasing addresses
     rep  movsw
     
@@ -116,6 +119,25 @@ load_track:
     ; check number of sectors that were read
     cmp  al, NUM_SECTORS_PER_TRACK
     jne  error
+
+    ; update segment for storing the next track
+    add  word [buf_seg], 576     ; 512 * 18 / 16 = 576
+
+    ; update cylinder_num/head_num
+    ; if head == 0 => head <- 1
+    ; if head == 1 => cylinder <- cylinder + 1
+    mov  bl, [head_num]
+    cmp  bl, 1
+    jne  skip_update_cyl
+    ; update cylinder
+    mov  al, [cylinder_num]
+    inc  al
+    mov  [cylinder_num], al
+skip_update_cyl:
+    ; update disk side (switch head number)
+    mov  al, 1
+    sub  al, [head_num]
+    mov  [head_num], al 
 
     ret
 
