@@ -1,13 +1,16 @@
 #include <keyboard.h>
-#include <stdint.h>
-#include <stdbool.h>
 #include "keymap.h"
+
 #include <intr.h>
 #include <io.h>
 #include <pic.h>
-
-// XXX
 #include <console.h>
+#include <eflags.h>
+
+#include <stdint.h>
+#include <stdbool.h>
+
+
 
 #define KEYBOARD_IRQ_NUM    0x01
 
@@ -31,16 +34,24 @@ uint8_t _read_buf(void)
 
 int keyboard_init(void)
 {
-    // TODO save IF
+    bool intr_flag;
 
     _.shift = _.rshift = _.lshift = false;
     _.ctrl = false;
+    
+    // save IF
+    intr_flag = eflags_get_IF();
+    intr_disable();
 
     // TODO perform a controller reset
 
     intr_register_irq(KEYBOARD_IRQ_NUM, _keyboard_isr);
+    
+    // enable irq line in the PIC
+    pic_enable_irq(KEYBOARD_IRQ_NUM);
 
-    // TODO restore IF
+    // restore previous IF
+    eflags_set_IF(intr_flag);
 
     return 0;
 }
@@ -80,7 +91,7 @@ void keyboard_isr(void)
 
         // map control characters 
         switch (c = _keymap[scancode]) {
-            case '\r':
+            case '\r': // TODO 'u'?
                 if (_.ctrl)
                     c = '\r';
                 break;

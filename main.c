@@ -5,30 +5,32 @@
 #include <pit.h>
 #include <keyboard.h>
 #include <shell.h>
-
-//XXX
-#include <vga.h>
+//#include <kstdio.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
 
 void main(void)
 {
+    intr_disable();
+
     console_init();
-    console_puts("kboot86");
-    pic_remap(32, 40);
+    //kprintf("kboot86\n");
+
+    pic_init();
     idt_init(0);
 
     if (pit_init())
         goto error;
 
+    // TODO keyboard belongs to console
     if (keyboard_init())
         goto error;
 
-    pic_enable();
     intr_enable();
 
     shell_do();
+
 error:
-    console_puts("*** ERROR! ***");
+    kprintf("*** ERROR! ***");
 }
