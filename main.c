@@ -14,14 +14,15 @@ void main(void)
 {
     intr_disable();
 
-    console_init();
-    //kprintf("kboot86\n");
 
     pic_init();
     idt_init(0);
 
     if (pit_init())
         goto error;
+
+    console_init();
+    //kprintf("kboot86\n");
 
     // TODO keyboard belongs to console
     if (keyboard_init())
@@ -32,5 +33,7 @@ void main(void)
     shell_do();
 
 error:
-    kprintf("*** ERROR! ***");
+    //kprintf("*** ERROR! ***");
+    while (1)
+        ;
 }

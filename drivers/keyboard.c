@@ -91,13 +91,18 @@ void keyboard_isr(void)
 
         // map control characters 
         switch (c = _keymap[scancode]) {
-            case '\r': // TODO 'u'?
+            case 'u':
                 if (_.ctrl)
-                    c = '\r';
+                    c = '\r';   // line kill
+                break;
+    
+            case 'l':
+                if (_.ctrl)
+                    c = 'L';    // TODO
                 break;
 
-            case 127:   // DEL
-                c = '\b';
+            case 127:   // DEL -> backspace
+                c = '\b';       // erase
                 break;
         }
     

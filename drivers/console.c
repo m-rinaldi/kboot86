@@ -24,6 +24,34 @@ static struct {
     volatile size_t     widx;
 } _;
 
+// line feed
+static void _line_feed(void)
+{
+    _.curs_x = 0;
+    if (VGA_NUM_ROWS == ++_.curs_y) {
+        vga_scroll_down();
+
+        _.curs_y = VGA_NUM_ROWS - 1;
+    }
+}
+
+static inline
+void _curs_forward(void)
+{
+    if (VGA_NUM_COLS == ++_.curs_x)
+        _line_feed();
+}
+
+static inline
+void _curs_backward(void)
+{
+    if (!_.curs_x) {
+        _.curs_x = VGA_NUM_COLS - 1;
+        _.curs_y--;
+    } else
+        _.curs_x--;
+}
+
 static inline
 bool _ibuf_is_full(void)
 {
@@ -55,21 +83,13 @@ int console_init(void)
     return 0;
 }
 
-// line feed
-static void _line_feed(void)
-{
-    _.curs_x = 0;
-    if (VGA_NUM_ROWS == ++_.curs_y) {
-        vga_scroll_down();
-
-        _.curs_y = VGA_NUM_ROWS - 1;
-    }
-}
+static int _del_ibuf(void);
 
 // kill control character
 static void _kill(void)
 {
-    // TODO call _del_ibuf() until ibuf is empty 
+    while (!_del_ibuf())
+        ;
 }
 
 
@@ -80,11 +100,14 @@ void _putc_attr(char c, uint8_t attr)
     vga_writec_attr_xy(c, attr, _.curs_x, _.curs_y);
 
     // update cursor 
+    _curs_forward();
+
+//XXX
+#if 0
     if (VGA_NUM_COLS == ++_.curs_x)
         _line_feed();
+#endif
 }
-
-static int _del_ibuf(void);
 
 // returns zero if char must not be echoed on the screen
 static inline
@@ -153,18 +176,17 @@ void console_put_ibuf(char c)
 
 static int _del_ibuf(void)
 {
-    // TODO source for race conditions?
+    if (_.line_completed)
+        return -1;
 
     if (_ibuf_is_empty())
         return -1;
 
     _.widx--;
 
-    // TODO update _.curs_x properly
-    // TODO what if line wrap around (if _.curs_x = 0 before decrement)
-    _.curs_x--;
+    _curs_backward();
     _putc(' ', true);
-    _.curs_x--;
+    _curs_backward();
 
     vga_draw_cursor_xy(_.curs_x, _.curs_y);
     return 0;
@@ -184,6 +206,7 @@ int console_get_line(char *buf, size_t *buf_len)
     
     {
     loop:
+        // TODO do not disable the whole interrupts, only the keyboard
         // TODO keyboard_disable_irq() instead
         intr_disable();
         if (!_.line_completed) {
