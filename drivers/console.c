@@ -22,6 +22,7 @@ static struct {
     volatile bool       line_completed;
     char                ibuf[IBUF_SIZE];
     volatile size_t     widx;
+    volatile bool       cleared;
 } _;
 
 // line feed
@@ -122,6 +123,10 @@ int _putc(char c, bool display)
             _kill();
             break;
 
+        case 127:
+            console_clear();
+            break;
+
         case '\b':
             _del_ibuf();
             break;
@@ -139,6 +144,7 @@ void console_clear(void)
 {
     vga_clear();
     _.curs_x = _.curs_y = 0;
+    _.cleared = true;
 }
 
 
@@ -192,24 +198,37 @@ static int _del_ibuf(void)
     return 0;
 }
 
+static void _display_ibuf(void)
+{
+    unsigned int i;
+
+    for (i = 0; i < _.widx; i++)
+        _putc(_.ibuf[i], true);
+
+    vga_draw_cursor_xy(_.curs_x, _.curs_y);
+}
+
 //XXX
 #include <intr.h>
 int console_get_line(char *buf, size_t *buf_len)
 {
     size_t len;
 
-    if (!buf || !buf_len)
-        return 1;
+    if (_.cleared) {
+        _display_ibuf();
+        _.cleared = false;
+    }
 
-    if (!*buf_len)
-        return 0;    
-    
     {
     loop:
         // TODO do not disable the whole interrupts, only the keyboard
         // TODO keyboard_disable_irq() instead
         intr_disable();
         if (!_.line_completed) {
+            if (_.cleared) {
+                return 1;
+            }
+
             // TODO keyboard_einable_irq() instead
             intr_enable();
             goto loop;

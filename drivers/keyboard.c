@@ -98,7 +98,7 @@ void keyboard_isr(void)
     
             case 'l':
                 if (_.ctrl)
-                    c = 'L';    // TODO
+                    c = 127;
                 break;
 
             case 127:   // DEL -> backspace
