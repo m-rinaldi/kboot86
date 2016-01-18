@@ -5,7 +5,7 @@
 #include <pit.h>
 #include <keyboard.h>
 #include <shell.h>
-//#include <kstdio.h>
+#include <kstdio.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
@@ -14,7 +14,6 @@ void main(void)
 {
     intr_disable();
 
-
     pic_init();
     idt_init(0);
 
@@ -22,7 +21,7 @@ void main(void)
         goto error;
 
     console_init();
-    //kprintf("kboot86\n");
+    kprintf("kboot86\n");
 
     // TODO keyboard belongs to console
     if (keyboard_init())
