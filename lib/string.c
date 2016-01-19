@@ -25,3 +25,19 @@ void *memcpy(void *dest, const void *src, size_t n)
 
     return dest;
 }
+
+void *memset(void *s, uint8_t c, size_t n)
+{
+    if (!s || !n)
+        return s;
+
+    while (n--)
+        *((uint8_t *) s + n) = c;
+
+    return s; 
+}
+
+void bzero(void *s, size_t n)
+{
+    memset(s, 0, n);
+}
