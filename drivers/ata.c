@@ -8,9 +8,8 @@
 //XXX
 #include <kstdio.h>
 
-// Command Block registers
-
-// Control Block registers
+// TODO IDENTIFY
+// TODO read_lba
 
 // Ports for routing the registers
 #define DATA        0x1f0 // [r/w]  data register
@@ -102,17 +101,13 @@ typedef struct {
 #define CMD_WLWR    0x32    // write long with retry
 #define CMD_WLWOR   0x32    // write long without retry
 
-
-// check BSY & DRQ before trying to send a command
-
-
-int ata_init(void)
+static void _set_control(ata_control_t control)
 {
-    // TODO perform a reset
-    return 0;
-}
+    uint8_t reg;
 
-// TODO ata_reset()
+    memcpy(&reg, &control, sizeof(control));
+    outb(CONTROL, reg);
+}
 
 static ata_status_t _read_status(void)
 {
@@ -123,6 +118,42 @@ static ata_status_t _read_status(void)
     memcpy(&status, &reg, sizeof(reg));
 
     return status;   
+}
+
+static bool _is_busy(void)
+{
+    ata_status_t status;
+
+    status = _read_status();
+    return status.bsy;
+}
+
+// check BSY & DRQ before trying to send a command
+
+static void _reset(void)
+{
+    ata_control_t control;
+
+    memset(&control, 0, sizeof(control)); 
+
+    control.srst = 1;
+    _set_control(control);
+
+    // TODO introduce a delay??
+
+    // the reset bit has to be cleared manually
+    control.srst = 0;
+    _set_control(control);
+
+    
+    while (_is_busy())
+        ;
+}
+
+int ata_init(void)
+{
+    _reset();
+    return 0;
 }
 
 static ata_drv_hd_t _read_drv_hd(void)
@@ -156,13 +187,6 @@ static uint16_t _read_data(void)
     return inw(DATA);
 }
 
-static bool _is_busy(void)
-{
-    ata_status_t status;
-
-    status = _read_status();
-    return status.bsy;
-}
 
 static int _send_cmd(unsigned int cmd)
 {
