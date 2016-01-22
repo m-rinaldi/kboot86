@@ -4,7 +4,7 @@ AS = ~/opt/cross/bin/i686-elf-as
 CFLAGS = -c -ffreestanding -Wall -Wextra
 INCLUDES = include/
 
-OBJ = drivers/drivers.o lib/lib.o main.o shell.o
+OBJ = drivers/drivers.o lib/lib.o test/test.o main.o shell.o
 
 KBOOT86_SIZE_MAX = $(shell expr 512 '*' 18 '*' 2)
 
@@ -51,6 +51,9 @@ drivers/drivers.o :
 
 lib/lib.o :
 	@make -C lib/
+
+test/test.o :
+	@make -C test/
 
 %.o : %.c
 	$(CC) -c $< $(CFLAGS) -I $(INCLUDES) -o $@
