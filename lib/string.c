@@ -14,6 +14,19 @@ size_t strlen(const char *s)
     return count;
 }
 
+char *strncpy(char *dest, const char *src, size_t n)
+{
+    size_t i;
+
+    for (i = 0; n; i++, n--) {
+        dest[i] = src[i];
+        if ('\0' == src[i])
+            break;
+    }
+
+    return dest;  
+}
+
 // TODO use MOVSB
 void *memcpy(void *dest, const void *src, size_t n)
 {
