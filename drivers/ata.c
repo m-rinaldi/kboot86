@@ -281,9 +281,14 @@ static void _read_buffer_data(ata_sector_t *dest)
 }
 
 #define MODEL_NUMBER_STR_LEN    40
+#define MODEL_NUMBER_STR_OFF    27
+
 #define SERIAL_NUMBER_STR_LEN   20
+#define SERIAL_NUMBER_STR_OFF   10
 static struct {
     bool        valid;
+
+    uint32_t    num_sectors;    // capacity
 
     uint16_t    cylinders;
     uint16_t    heads;
@@ -301,22 +306,39 @@ static struct {
     
 } _id_data;
 
-static void _set_identify_data(ata_sector_t *id_data)
+static void _set_identify_data(const ata_sector_t *id_data)
 {
     uint16_t *p;
 
     p = (uint16_t *) id_data;
-   
+
+    // TODO only valid if bit 0 of word 53 is set to 1 
+    _id_data.num_sectors = (uint32_t) p[58] << 16 | p[57];
+
     _id_data.cylinders = p[1];
     _id_data.heads = p[3];
     _id_data.spt = p[6];
 
-    
+
+    strncpy(_id_data.model_number, (char *) (p + 27), MODEL_NUMBER_STR_LEN);
+    _id_data.model_number[MODEL_NUMBER_STR_LEN] = '\0';
 
     _id_data.valid = true;
 }
 
-// TODO
+static inline
+void _swap_str_bytes(char *str, size_t len)
+{
+    char tmp;
+    size_t i;
+
+    for (i = 0; i < len; i += 2) {
+        tmp = str[i];
+        str[i] = str[i+1];
+        str[i+1] = tmp;
+    }
+}
+
 static int _identify(unsigned int drive_num)
 {
     // TODO move this out from the stack
@@ -356,19 +378,19 @@ static int _identify(unsigned int drive_num)
 
     // read data
     _read_buffer_data(&identify_sector);
+   
+    // lower byte of a 16-bit word is the second character: 
+    // "Generic 1234" appears as "eGenir c2143"
+    // fix this issue before retrieving the string
+    _swap_str_bytes((char *)
+                        ((uint16_t *) &identify_sector + MODEL_NUMBER_STR_OFF),
+                        MODEL_NUMBER_STR_LEN);
+    _swap_str_bytes((char *)
+                        ((uint16_t *) &identify_sector + SERIAL_NUMBER_STR_OFF),
+                        SERIAL_NUMBER_STR_LEN);
 
     _set_identify_data(&identify_sector);
     
-    return 0;
-}
-
-
-int ata_init(void)
-{
-    _reset();
-    if (_identify(0))
-        return 1;
-
     return 0;
 }
 
@@ -379,14 +401,27 @@ void ata_display_info(void)
         return;
     }
 
+    kprintf("model: %s\n", _id_data.model_number);
+    kprintf("capacity:  %8d sectors\n", _id_data.num_sectors);
     kprintf("cylinders: %7d\n", _id_data.cylinders);
     kprintf("heads:     %7d\n", _id_data.heads);
     kprintf("spt:       %7d\n", _id_data.spt);
+
 }
+
+int ata_init(void)
+{
+    _reset();
+    if (_identify(0))
+        return 1;
+
+    return 0;
+}
+
 
 // TODO define ata_sector_t type
 // TODO write an ata_read_lba_sector() function instead
-int ata_read_chs_sector(unsigned int cyl_num, unsigned int head_num,
+int ata_read_sector_chs(unsigned int cyl_num, unsigned int head_num,
                         unsigned int sec_num, ata_sector_t *buf)
 {
     if (cyl_num > 1023)
@@ -425,5 +460,32 @@ int ata_read_chs_sector(unsigned int cyl_num, unsigned int head_num,
 
     _read_buffer_data(buf);
     return 0;
+}
+
+static inline
+int _lba2chs(const lba_t lba,
+                    unsigned int *c, unsigned int *h, unsigned int *s)
+{
+    if (lba >= _id_data.num_sectors)
+        return 1;
+
+    *c = lba / (_id_data.heads * _id_data.spt);
+
+    *h = (lba - *c * _id_data.heads * _id_data.spt) / _id_data.spt;
+
+    *s = (lba - *c * _id_data.heads * _id_data.spt - *h * _id_data.spt) + 1;
+
+    return 0;
+}
+
+// this is only software-translated LBA
+int ata_read_sector_lba(lba_t lba, ata_sector_t *buf)
+{
+    unsigned int c, h, s;
+
+    if (_lba2chs(lba, &c, &h, &s))
+        return 1;
+
+    return ata_read_sector_chs(c, h, s, buf);     
 }
 

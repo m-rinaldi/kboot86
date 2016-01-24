@@ -75,5 +75,6 @@ clean:
 	@echo -n cleaning...
 	@make -C drivers/ clean
 	@make -C lib/ clean
+	@make -C test/ clean
 	@rm -f *.bin *.o *.pad floppy.img *.log
 	@echo done

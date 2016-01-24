@@ -11,8 +11,6 @@
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
 
-static ata_sector_t _buf;
-
 void main(void)
 {
     intr_disable();
@@ -33,11 +31,14 @@ void main(void)
 
     intr_enable();
 
-    int test_hdd(void);
-    if (!test_hdd())
+    int test_hdd_lba(void);
+    if (!test_hdd_lba())
         kprintf("OK!\n");
     else
         kprintf("Error!\n");
+
+    if (ata_init())
+        goto error;
 
     ata_display_info();
 
