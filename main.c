@@ -11,7 +11,7 @@
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
 
-static uint8_t _buf[512];
+static ata_sector_t _buf;
 
 void main(void)
 {
@@ -24,23 +24,22 @@ void main(void)
         goto error;
 
     console_init();
-    kprintf("kboot86\n");
 
     // TODO keyboard belongs to console
     if (keyboard_init())
         goto error;
+    
+    kprintf("kboot86\n");
 
     intr_enable();
 
-    if (ata_init() || ata_select_drive(0) || ata_read_chs_sector(0,0,1,_buf))
-        goto error;
-    {
-        int i;
-        
-        for (i = 0; i < 16; i++)
-            kprintf("%x\n", _buf[i]);
-        
-    }
+    int test_hdd(void);
+    if (!test_hdd())
+        kprintf("OK!\n");
+    else
+        kprintf("Error!\n");
+
+    ata_display_info();
 
     shell_do();
 

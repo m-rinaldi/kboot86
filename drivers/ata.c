@@ -17,8 +17,11 @@
 #define FEATURES    0x1f1 // [w]    features register
 #define SEC_CNT     0x1f2 // [r/w]  how many sectors to read/write
 #define SEC_NUM     0x1f3 // [r/w]  sector number   / LBAlo
+#define LBA_LO      SEC_NUM
 #define CYL_LO      0x1f4 // [r/w]  cylinder low    / LBAmid
+#define LBA_MID     CYL_LO
 #define CYL_HI      0x1f5 // [r/w]  cylinder high   / LBAhi
+#define LBA_HI      CYL_HI
 #define DRV_HD      0x1f6 // [r/w]  drive/head
 #define CMD         0x1f7 // [w]    command port
 #define STATUS      0x1f7 // [r]    status register
@@ -91,15 +94,16 @@ typedef struct {
 
 
 // commands:
-#define CMD_FT      0x50    // format track
-#define CMD_RSWR    0x20    // read sectors with retry
-#define CMD_RSWOR   0x21    // read sectors without retry
-#define CMD_RLWR    0x22    // read long with retry
-#define CMD_RLWOR   0x23    // read long without retry
-#define CMD_WSWR    0x30    // write sectors with retry
-#define CMD_WSWOR   0x31    // write sectors without retry
-#define CMD_WLWR    0x32    // write long with retry
-#define CMD_WLWOR   0x32    // write long without retry
+#define CMD_FT          0x50    // format track
+#define CMD_RSWR        0x20    // read sectors with retry
+#define CMD_RSWOR       0x21    // read sectors without retry
+#define CMD_RLWR        0x22    // read long with retry
+#define CMD_RLWOR       0x23    // read long without retry
+#define CMD_WSWR        0x30    // write sectors with retry
+#define CMD_WSWOR       0x31    // write sectors without retry
+#define CMD_WLWR        0x32    // write long with retry
+#define CMD_WLWOR       0x32    // write long without retry
+#define CMD_IDENTIFY    0xec
 
 static void _set_control(ata_control_t control)
 {
@@ -109,7 +113,8 @@ static void _set_control(ata_control_t control)
     outb(CONTROL, reg);
 }
 
-static ata_status_t _read_status(void)
+static inline
+ata_status_t _read_status(void)
 {
     ata_status_t status;
     uint8_t reg;
@@ -120,12 +125,22 @@ static ata_status_t _read_status(void)
     return status;   
 }
 
-static bool _is_busy(void)
+static inline
+bool _is_busy(void)
 {
     ata_status_t status;
 
     status = _read_status();
     return status.bsy;
+}
+
+static inline
+bool _is_drq(void)
+{
+    ata_status_t status;
+
+    status = _read_status();
+    return status.drq;    
 }
 
 // check BSY & DRQ before trying to send a command
@@ -148,12 +163,6 @@ static void _reset(void)
     
     while (_is_busy())
         ;
-}
-
-int ata_init(void)
-{
-    _reset();
-    return 0;
 }
 
 static ata_drv_hd_t _read_drv_hd(void)
@@ -257,10 +266,128 @@ int ata_select_drive(unsigned int drive_num)
     return 0;
 }
 
+// read sector buffer data 
+static void _read_buffer_data(ata_sector_t *dest)
+{
+    unsigned int i;
+    uint16_t *data;
+
+    for (i = 0, data = (uint16_t *) dest;
+         i < sizeof(ata_sector_t)/sizeof(*data);
+         i++, data++)
+    {
+        *data = _read_data();
+    }
+}
+
+#define MODEL_NUMBER_STR_LEN    40
+#define SERIAL_NUMBER_STR_LEN   20
+static struct {
+    bool        valid;
+
+    uint16_t    cylinders;
+    uint16_t    heads;
+    uint16_t    spt;
+
+    uint16_t    bytes_per_sector;   // unformatted
+
+    bool        lba_supported;  // user-addressable sectors
+    uint32_t    lba_max;
+
+    bool        dma_supported;
+    
+    char        model_number[MODEL_NUMBER_STR_LEN+1];
+    char        serial_number[SERIAL_NUMBER_STR_LEN+1];
+    
+} _id_data;
+
+static void _set_identify_data(ata_sector_t *id_data)
+{
+    uint16_t *p;
+
+    p = (uint16_t *) id_data;
+   
+    _id_data.cylinders = p[1];
+    _id_data.heads = p[3];
+    _id_data.spt = p[6];
+
+    
+
+    _id_data.valid = true;
+}
+
+// TODO
+static int _identify(unsigned int drive_num)
+{
+    // TODO move this out from the stack
+    // TODO write a memory manager to solve this kind of problems
+    ata_sector_t identify_sector;
+
+    ata_status_t status;
+    uint8_t reg;
+
+    // so far only one and the first device is supported
+    if (drive_num)
+        return 1;
+
+    if (ata_select_drive(drive_num))
+        return 1;
+
+    // set CHS to zero (LBAlo, LBAmid, LBAhi)
+    outb(SEC_NUM,  0);
+    outb(CYL_LO, 0);
+    outb(CYL_HI,  0); 
+
+    _send_cmd(CMD_IDENTIFY);
+
+    status = _read_status();
+    memcpy(&reg, &status, sizeof(reg));
+    if (!reg)
+        return 1;   // drive does not exist
+    
+    while (_is_busy())
+        ;
+
+    // TODO check check LBAmid, LBAhi to see if the are non-zero
+    //      if so, the drive is not ATA
+
+    while (!_is_drq())
+        ;
+
+    // read data
+    _read_buffer_data(&identify_sector);
+
+    _set_identify_data(&identify_sector);
+    
+    return 0;
+}
+
+
+int ata_init(void)
+{
+    _reset();
+    if (_identify(0))
+        return 1;
+
+    return 0;
+}
+
+void ata_display_info(void)
+{
+    if (!_id_data.valid) {
+        kprintf("no info to display\n");
+        return;
+    }
+
+    kprintf("cylinders: %7d\n", _id_data.cylinders);
+    kprintf("heads:     %7d\n", _id_data.heads);
+    kprintf("spt:       %7d\n", _id_data.spt);
+}
+
 // TODO define ata_sector_t type
 // TODO write an ata_read_lba_sector() function instead
 int ata_read_chs_sector(unsigned int cyl_num, unsigned int head_num,
-                        unsigned int sec_num, void *buf)
+                        unsigned int sec_num, ata_sector_t *buf)
 {
     if (cyl_num > 1023)
         return 1;
@@ -283,7 +410,7 @@ int ata_read_chs_sector(unsigned int cyl_num, unsigned int head_num,
 
     if (_send_cmd(CMD_RSWOR))
         return 1;
-
+    
     // wait until the sector buffer requires service
     {
         ata_status_t status;
@@ -295,17 +422,8 @@ int ata_read_chs_sector(unsigned int cyl_num, unsigned int head_num,
         if (status.err)
             return 1;
     }
-   
-    // read sector buffer data 
-    {
-        unsigned int i;
-        uint16_t *data;
 
-        // TODO replace magic number with sizeof() operator for the new type 
-        for (i = 0, data = buf; i < 512 / sizeof(*data); i++, data++)
-            *data = _read_data(); 
-    }
-
+    _read_buffer_data(buf);
     return 0;
 }
 
