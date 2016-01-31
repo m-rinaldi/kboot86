@@ -2,7 +2,6 @@
 
 #include <ata.h>
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <kstdio.h>
@@ -103,6 +102,21 @@ int mbr_init(void)
     _bootable_partition_found = false;
     for (i = 0, pe = mbr.partition; i < NUM_PARTITIONS_MAX; i++, pe++)
         _set_partition_info(i, pe);
+
+    return 0;
+}
+
+int mbr_get_partition_info(unsigned int pnum,
+                           uint32_t *start_sec, uint32_t *num_secs)
+{
+    if (!_partition_entry[pnum].valid)
+        return 1;   // unused entry
+
+    if (start_sec)
+        *start_sec = _partition_entry[pnum].starting_sec_lba;
+    
+    if (num_secs)
+        *num_secs = _partition_entry[pnum].num_secs;
 
     return 0;
 }
