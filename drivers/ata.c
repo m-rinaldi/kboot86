@@ -418,9 +418,6 @@ int ata_init(void)
     return 0;
 }
 
-
-// TODO define ata_sector_t type
-// TODO write an ata_read_lba_sector() function instead
 int ata_read_sector_chs(unsigned int cyl_num, unsigned int head_num,
                         unsigned int sec_num, ata_sector_t *buf)
 {

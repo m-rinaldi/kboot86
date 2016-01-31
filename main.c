@@ -6,7 +6,7 @@
 #include <keyboard.h>
 #include <shell.h>
 #include <kstdio.h>
-#include <ata.h>
+#include <hdd.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
@@ -31,16 +31,10 @@ void main(void)
 
     intr_enable();
 
-    int test_hdd_lba(void);
-    if (!test_hdd_lba())
-        kprintf("OK!\n");
-    else
-        kprintf("Error!\n");
-
-    if (ata_init())
+    if (hdd_init())
         goto error;
 
-    ata_display_info();
+    hdd_display();
 
     shell_do();
 
