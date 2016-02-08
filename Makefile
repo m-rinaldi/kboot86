@@ -6,7 +6,7 @@ INCLUDES = include/
 
 OBJ = drivers/drivers.o lib/lib.o test/test.o main.o shell.o
 
-KBOOT86_SIZE_MAX = $(shell expr 512 '*' 18 '*' 2)
+KBOOT86_SIZE_MAX = $(shell expr 512 '*' 18 '*' 3)
 
 export CC
 export AS
@@ -17,20 +17,20 @@ export LD
 
 all: floppy.img
 
-floppy.img : boot0.bin boot1.bin floppy.pad track0.pad  track2.pad kboot86.bin
+floppy.img : boot0.bin boot1.bin floppy.pad track0.pad track3.pad kboot86.bin
 	@echo -n generating floppy image...
-	@cat boot0.bin boot1.bin track0.pad kboot86.bin track2.pad floppy.pad > floppy.img
+	@cat boot0.bin boot1.bin track0.pad kboot86.bin track3.pad floppy.pad > floppy.img
 	@echo done
 
-floppy.pad track0.pad track2.pad : kboot86.bin
+floppy.pad track0.pad track3.pad : kboot86.bin
 	#@echo -n "generating the padding for 1st track of the floppy..."
 	dd if=/dev/zero of=./track0.pad bs=512 count=9 2>/dev/null
 	#@echo done
-	#@echo -n "generating the padding for 3rd track of the floppy..."
-	dd if=/dev/zero of=./track2.pad bs=1 count=$$(expr ${KBOOT86_SIZE_MAX} - $$(stat -c %s ./kboot86.bin)) 2>/dev/null
+	#@echo -n "generating the padding for 4th track of the floppy..."
+	dd if=/dev/zero of=./track3.pad bs=1 count=$$(expr ${KBOOT86_SIZE_MAX} - $$(stat -c %s ./kboot86.bin)) 2>/dev/null
 	#@echo done
 	#@echo -n "generating the padding for the floppy image..."
-	dd if=/dev/zero of=./floppy.pad bs=512 count=2826 2>/dev/null
+	dd if=/dev/zero of=./floppy.pad bs=512 count=2808 2>/dev/null
 	#@echo done
 
 hdd.img : hdd_sector.bin hdd.pad

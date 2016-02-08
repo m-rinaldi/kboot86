@@ -4,7 +4,7 @@
 #include <string.h>
 #include <intr.h>
 
-const char *prompt = "bsh-> ";
+static const char *_prompt = "bsh-> ";
 
 #define BUF_SIZE    512
 // echo shell
@@ -15,7 +15,7 @@ void shell_do(void)
 
     console_puts("welcome to the boot shell\n");
     while (1) {
-        console_puts(prompt);
+        console_puts(_prompt);
         len = BUF_SIZE-1;
 
         if (console_get_line(str, &len))

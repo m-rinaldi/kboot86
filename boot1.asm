@@ -36,6 +36,7 @@ stack_top:
 
     call load_track
     call load_track
+    call load_track
 
     push ok_str
     call bios_print
@@ -58,7 +59,7 @@ stack_top:
     xor  di, di
     
     ; TODO make dependent from the number of calls to load_track
-    mov  cx, 18432/2    ; 18kiB to copy
+    mov  cx, 27648/2    ; 18kiB to copy
     cld                 ; direction: increasing addresses
     rep  movsw
     
