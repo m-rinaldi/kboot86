@@ -299,6 +299,7 @@ void fat16_display_root(void)
     int i;
     dir_entry_t *de;
 
+    // TODO possible endless loop; limit to max num of entries for rootdir
     for (i = 0; ; i++) {
         if (!(de = _rootdir_get_entry_num(i)))
             return;
@@ -442,7 +443,7 @@ ssize_t fat16_load(const char *filename, void *buf, const size_t buf_size)
         dir_entry_t *de;
 
         if (!(de = _rootdir_find_entry(filename)))
-            return 1;
+            return -1;
 
         // directory entry containing the file found
         clu_num = de->starting_cluster + ROOT_CLUSTERS;

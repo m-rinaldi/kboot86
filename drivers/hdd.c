@@ -2,6 +2,7 @@
 
 #include <ata.h>
 #include <mbr.h>
+#include <kstdio.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -21,22 +22,23 @@ int hdd_init(void)
 static inline
 bool _within_partition(unsigned int pnum, uint32_t sec_num_lba)
 {
-    uint32_t start_sec, num_secs;
+    uint32_t num_secs;
 
-    if (mbr_get_partition_info(pnum, &start_sec, &num_secs))
+    if (mbr_get_partition_info(pnum, NULL, &num_secs))
         return false;   // unused partition
 
-    if (sec_num_lba < start_sec || sec_num_lba - start_sec >= num_secs)
+    if (sec_num_lba >= num_secs)    // out of partition bounds
         return false;
 
     return true;
 }
 
+
 static inline
 int _rel2abs_sector(unsigned int pnum, uint32_t rsec_num, uint32_t *asec_num)
 {
     uint32_t start_asec;
-
+    
     if (!_within_partition(pnum, rsec_num))
         return 1;
 
@@ -60,7 +62,9 @@ int hdd_read_sector(unsigned int pnum, uint32_t rsec_num, ata_sector_t *buf)
 void hdd_display(void)
 {
     ata_display_info();
-    mbr_display(); 
+    kprintf("*** MBR ***\n");
+    mbr_display();
+    kprintf("***********\n");
 }
 
 
