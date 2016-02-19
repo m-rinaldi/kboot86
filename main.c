@@ -8,13 +8,15 @@
 #include <kstdio.h>
 #include <hdd.h>
 #include <fat16.h>
+#include <elf32.h>
+#include <jmp.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
 
-#define FILENAME "welcome.txt"
-#define BUF_SIZE 128 
-static char _buf[BUF_SIZE];
+#define FILENAME "kernel.elf"
+#define BUF_SIZE (1 << 20)
+static void *_mem_load_addr = (void *) (2 << 20);
 
 void main(void)
 {
@@ -45,14 +47,22 @@ void main(void)
 
     {
         int count;
+        uintptr_t jmp_addr;
+
         kprintf("file size: %d\n", fat16_get_file_size(FILENAME));
-        if (-1 == (count = fat16_load(FILENAME, _buf, BUF_SIZE))) {
+        if (-1 == (count = fat16_load(FILENAME, _mem_load_addr, BUF_SIZE))) {
             kprintf("error while loading file %s\n", FILENAME);
+            goto error;
         } else {
             kprintf("read: %d bytes\n", count);
-            _buf[count-1] = '\0';   // VIM adds a newline at the end
-            kprintf("%s: <%s>\n", FILENAME, _buf); 
         }
+
+        if (!(jmp_addr = elf32_map(_mem_load_addr))) {
+            kprintf("error while mapping the ELF image\n");
+            goto error;
+        }
+        kprintf("jmp addr: %x\n", jmp_addr);
+        jmp(jmp_addr);
     }
 
     shell_do();

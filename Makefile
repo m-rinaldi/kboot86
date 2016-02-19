@@ -43,8 +43,9 @@ hdd.pad :
 hdd_sector.bin : hdd_sector.asm
 	@nasm $< -f bin -o $@
 
-kboot86.bin : _kboot86.o $(OBJ)
-	@$(LD) -T kboot86.ld -o kboot86.bin _kboot86.o $(OBJ)
+# TODO include all the object files
+kboot86.bin : _kboot86.o jmp.o $(OBJ)
+	@$(LD) -T kboot86.ld -o kboot86.bin _kboot86.o jmp.o $(OBJ)
 
 drivers/drivers.o : 
 	@make -C drivers/
@@ -58,8 +59,11 @@ test/test.o :
 %.o : %.c
 	$(CC) -c $< $(CFLAGS) -I $(INCLUDES) -o $@
 
-_kboot86.o : _kboot86.S
+%.o : %.S
 	@$(AS) -c $< -o $@ 
+    
+#_kboot86.o : _kboot86.S
+#	@$(AS) -c $< -o $@ 
 
 boot1.bin : boot1.asm
 	@echo -n "compiling the 2nd stage bootloader: $<..."
