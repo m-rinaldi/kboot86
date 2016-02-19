@@ -7,5 +7,6 @@ jmp:
     movb $0x1f, %ah
     movl $0xb8000, %edx
     movw %ax, (%edx)
-   
-    jmp 0x100000
+  
+    movl 4(%esp), %eax
+    jmp  *%eax 

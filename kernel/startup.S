@@ -1,6 +1,6 @@
 .text
-.globl startup
-startup:
+.globl _startup
+_startup:
 
     // XXX
     movb $'B', %al
