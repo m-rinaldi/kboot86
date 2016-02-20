@@ -3,7 +3,7 @@ SRC =   $(wildcard *.c)
 OBJ =   $(patsubst %.c, %.o, $(SRC))
 OBJ +=  $(patsubst %.S, %.o, $(wildcard *.S))
 
-TARGET = lib.o
+TARGET = $(shell basename $$(pwd)).o
 
 .PHONY: all clean
 
