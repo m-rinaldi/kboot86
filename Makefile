@@ -4,7 +4,11 @@ AS = ~/opt/cross/bin/i686-elf-as
 CFLAGS = -c -ffreestanding -Wall -Wextra
 INCLUDES = include/
 
-OBJ = drivers/drivers.o lib/lib.o test/test.o main.o shell.o
+OBJ = drivers/drivers.o lib/lib.o mm/mm.o test/test.o main.o shell.o
+
+# TODO just include the number of the subdirectories and the rest should be 
+#      done automatically
+SUBDIRS = drivers lib mm test
 
 KBOOT86_SIZE_MAX = $(shell expr 512 '*' 18 '*' 3)
 
@@ -53,6 +57,9 @@ drivers/drivers.o :
 lib/lib.o :
 	@make -C lib/
 
+mm/mm.o :
+	@make -C mm/
+
 test/test.o :
 	@make -C test/
 
@@ -77,6 +84,7 @@ boot0.bin : boot0.asm
 
 clean:
 	@echo -n cleaning...
+	@make -C mm/ clean
 	@make -C drivers/ clean
 	@make -C lib/ clean
 	@make -C test/ clean
