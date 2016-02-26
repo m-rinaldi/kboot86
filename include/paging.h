@@ -1,7 +1,6 @@
 #pragma once
 
+#include <mm_common.h>
 #include <stdint.h>
 
-#define PAGE_READ   1
-#define PAGE_WRITE  2
-#define PAGE_EXEC   4
+int paging_map(uint32_t vaddr, uint32_t paddr);
