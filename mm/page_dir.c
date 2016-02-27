@@ -3,44 +3,42 @@
 #include <string.h>
 
 typedef struct {
-    unsigned int    paddr           :   20; // page table 4-kB aligned addr
-    unsigned int    zero0           :   7;
-    /*
-    unsigned int    available       :   3;
-    unsigned int    ignored         :   1;
-    unsigned int    size            :   1;  
-    unsigned int    zero            :   1;
-    unsigned int    accessed        :   1;
-    */
-    unsigned int    cache_disabled  :   1;
-
+    unsigned int    present         :   1;
     unsigned int    zero1           :   3;
     /*
-    unsigned int    write_through   :   1;
-    unsigned int    user_supervisor :   1;
-    unsigned int    read_write      :   1;
+        unsigned int    read_write      :   1;
+        unsigned int    user_supervisor :   1;
+        unsigned int    write_through   :   1;
     */
-    unsigned int    present         :   1;
+
+    unsigned int    cache_disabled  :   1;
+    /*
+        unsigned int    accessed        :   1;
+        unsigned int    zero            :   1;
+        unsigned int    size            :   1;  
+        unsigned int    ignored         :   1;
+        unsigned int    available       :   3;
+    */
+
+    unsigned int    zero0           :   7;
+    unsigned int    paddr           :   20; // page table 4-kB aligned addr
 } __attribute__((packed)) page_dir_entry_t;
 
 #define PAGE_DIR_TABLE_LEN  1024
-
-// 15MB / 4MB => 4 tables
-#define NUM_PAGE_TABLES     4
 
 // TODO volatile, does the MMU change the entries? Yes it does (access & dirty)
 // the page directory table
 // "aligned" variable attribute applies to the array, not to each element
 static page_dir_entry_t _[PAGE_DIR_TABLE_LEN] __attribute__((aligned(4096)));
 
-page_dir_entry_t page_dir_get_entry(uint_fast16_t entry_num)
-{
-    return _[entry_num & 0x3ff]; 
-}
-
 static inline bool _entry_num_is_valid(uint_fast16_t entry_num)
 {
     return entry_num < PAGE_DIR_TABLE_LEN;
+}
+
+page_dir_entry_t page_dir_get_entry(uint_fast16_t entry_num)
+{
+    return _[entry_num & 0x3ff]; 
 }
 
 int page_dir_set_entry(uint_fast16_t entry_num, uint32_t paddr)
@@ -68,11 +66,23 @@ bool page_dir_entry_is_present(uint_fast16_t entry_num)
     return page_dir_get_entry(entry_num).present; 
 }
 
+// load the paddr of the page directory in CR3
+static inline void _load(page_dir_entry_t *page_dir_paddr)
+{
+    asm volatile (
+                    "movl %0, %%cr3\n\t"
+                    :   // no output
+                    : "a" (page_dir_paddr)
+                 );
+}
+
 void page_dir_init(void)
 {
     size_t i;
 
-    // set everything to zero
+    // set all the entries in the page directory everything to zero
     for (i = 0; i < PAGE_DIR_TABLE_LEN; i++)
         bzero(_ + i, sizeof(_[0]));
+
+    _load(_);
 }

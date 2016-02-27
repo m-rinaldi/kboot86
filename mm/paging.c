@@ -8,6 +8,9 @@
 #define MAX_PADDR   0x00efffff
 #define PAGE_SIZE   4096
 
+// XXX
+#include <kstdio.h>
+
 static inline
 uint_fast16_t _vaddr2pd_idx(uint32_t vaddr)
 {
@@ -24,7 +27,7 @@ static int _setup_identity(void)
 {
     uint32_t addr;
 
-    for (addr = 0; addr <= MAX_PADDR + PAGE_SIZE; addr += PAGE_SIZE)
+    for (addr = 0; addr + PAGE_SIZE-1 <= MAX_PADDR; addr += PAGE_SIZE)
         if (paging_map(addr, addr))
             return 1;
 
@@ -43,6 +46,7 @@ int paging_init(void)
     return 0;
 }
 
+// TODO implemente this functions to set/get the CR3
 // TODO uint32_t _get_page_dir()
 // TODO uint32_t _set_page_dir()
 
@@ -68,7 +72,7 @@ int paging_map(uint32_t vaddr, uint32_t paddr)
         return 1;
 
     // out of for-use-available physical memory
-    if (paddr + PAGE_SIZE > MAX_PADDR)
+    if (paddr + PAGE_SIZE-1 > MAX_PADDR)
         return 1;
 
     // localize the entry in the page directory

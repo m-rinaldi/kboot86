@@ -10,6 +10,7 @@
 #include <fat16.h>
 #include <elf32.h>
 #include <jmp.h>
+#include <paging.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
@@ -38,6 +39,14 @@ void main(void)
 
     intr_enable();
 
+    kprintf("initializing paging...");
+    if (paging_init())
+        goto error;
+    kprintf("ok\n");
+    
+    paging_enable();
+
+#if 0
     if (hdd_init() || fat16_init(0))
         goto error;
 
@@ -64,11 +73,12 @@ void main(void)
         kprintf("jmp addr: %x\n", jmp_addr);
         jmp(jmp_addr);
     }
+#endif
 
     shell_do();
 
 error:
-    kprintf("*** ERROR! ***");
+    kprintf("\n*** ERROR! ***");
     while (1)
         ;
 }

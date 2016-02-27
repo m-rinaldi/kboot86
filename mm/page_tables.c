@@ -5,21 +5,20 @@
 
 #define PAGE_TABLE_LEN  1024
 typedef struct {
-    unsigned int    paddr           :   20; // page table 4-kB aligned addr
-    unsigned int    zero            :   7;
-    /* corresponds to:
-        unsigned int    available       :   3;
-        unsigned int    global          :   1;
-        unsigned int    zero            :   1;
-        unsigned int    dirty           :   1;
-        unsigned int    accessed        :   1;
-    */
-
-    unsigned int    cache_disabled  :   1;
-    unsigned int    write_through   :   1;
-    unsigned int    user_supervisor :   1;
-    unsigned int    read_write      :   1;
     unsigned int    present         :   1;
+    unsigned int    read_write      :   1;
+    unsigned int    user            :   1;
+    unsigned int    write_through   :   1;
+    unsigned int    cache_disabled  :   1;
+    unsigned int    zero            :   7;
+    /*
+        unsigned int    accessed        :   1;
+        unsigned int    dirty           :   1;
+        unsigned int    zero            :   1;
+        unsigned int    global          :   1;
+        unsigned int    available       :   3;
+    */
+    unsigned int    paddr           :   20; // page table 4-kB aligned addr
 } __attribute__((packed)) page_table_entry_t;
 
 typedef page_table_entry_t page_table_t[PAGE_TABLE_LEN];
@@ -100,6 +99,10 @@ int page_tables_set_entry(uint_fast16_t table_idx, uint_fast16_t entry_num,
 
     pte = &_[array_idx][entry_num];
     pte->paddr = paddr >> 12;
+    pte->zero = 0;
+    pte->cache_disabled = 1;
+    pte->user = 0;
+    pte->present = 1;
 
     return 0;
 }
