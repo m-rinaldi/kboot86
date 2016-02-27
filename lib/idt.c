@@ -167,6 +167,12 @@ int idt_init(uint32_t base)
         idt_set_intr_gate(33, dummy_isr);
     }
 
+    // XXX
+    {
+        extern void page_fault(void);
+        idt_set_intr_gate(14, page_fault);
+    }
+
     // TODO
 
     _set_idtr(idtr);
