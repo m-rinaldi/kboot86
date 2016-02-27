@@ -6,7 +6,6 @@
 #include <stddef.h>
 
 #define MAX_PADDR   0x00efffff
-#define PAGE_SIZE   4096
 
 // XXX
 #include <kstdio.h>

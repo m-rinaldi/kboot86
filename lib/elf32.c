@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <kstdio.h>
 
+#include <paging.h>
+
 #define SHN_UNDEF   0
 
 enum elf_ident {
@@ -192,26 +194,40 @@ bool elf32_is_supported(const elf32_ehdr_t *ehdr)
     return true;
 }
 
-// TODO about the page permissions (no paging implemented yet)
 static inline
 int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
 {
     uint8_t *dst, *src;
+    uintptr_t paddr;
     size_t filesz, memsz;
 
-    dst = (uint8_t *) phdr->p_paddr;
+    paddr = phdr->p_paddr;
+    dst = (uint8_t *) phdr->p_vaddr;
     src = (uint8_t *) (ehdr_addr + phdr->p_offset);
 
     filesz = phdr->p_filesz;
     memsz  = phdr->p_memsz;
 
+    if ((uintptr_t) dst % PAGE_SIZE)
+        return 1;   // starting addr not page aligned
+
     // copy in memory the contents of the ELF that were in the file
-    for (; filesz; filesz--, memsz--) 
+    for (; filesz; filesz--, memsz--, paddr++) {
+        if (!((uintptr_t) dst % PAGE_SIZE))
+            if (paging_map((uintptr_t) dst, paddr))
+                return 1;
+
+        // copy the contents
         *dst++ = *src++;
+    }
 
     // set to zero the rest of the bytes not present in the ELF image
-    for (; memsz; memsz--)
+    for (; memsz; memsz--) {
+        if (!((uintptr_t) dst % PAGE_SIZE))
+            if (paging_map((uintptr_t) dst, paddr))
+                return 1;
         *dst++ = 0;
+    }
 
     return 0;
 }

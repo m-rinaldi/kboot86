@@ -3,9 +3,10 @@ ENTRY(_startup)
 STARTUP(startup.o)
 OUTPUT(kernel.elf)
 
-SECTIONS
+SECTIONS 
 {
-    .text.start (0x00100000) : {
+    /*          VMA                 LMA           */
+    .text.start (0xc0000000)    :   AT(0x00100000) {
         startup.o(.text)
     }
 

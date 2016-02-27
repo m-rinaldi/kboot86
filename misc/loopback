@@ -1,0 +1,1 @@
+sudo losetup -o 1048576  --sizelimit 32505856 /dev/loop1 hdd.img

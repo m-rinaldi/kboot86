@@ -46,7 +46,6 @@ void main(void)
     
     paging_enable();
 
-#if 0
     if (hdd_init() || fat16_init(0))
         goto error;
 
@@ -73,7 +72,6 @@ void main(void)
         kprintf("jmp addr: %x\n", jmp_addr);
         jmp(jmp_addr);
     }
-#endif
 
     shell_do();
 
