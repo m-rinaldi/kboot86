@@ -70,6 +70,8 @@ void main(void)
             goto error;
         }
         kprintf("jmp addr: %x\n", jmp_addr);
+        kprintf("vaddr: %x => paddr: %x\n",
+                jmp_addr, paging_vaddr2paddr(jmp_addr));
         jmp(jmp_addr);
     }
 

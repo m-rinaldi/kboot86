@@ -42,6 +42,10 @@ int paging_init(void)
     if (_setup_identity())
         return 1;
 
+    // map the last page dir entry to itself
+    if (page_dir_automap())
+        return 1;
+
     return 0;
 }
 
@@ -99,4 +103,23 @@ int paging_map(uint32_t vaddr, uint32_t paddr)
     _reset_mmu_cache();
 
     return 0;
+}
+
+// for the currently working page directory
+// the page directory may be other than the local structure
+uint32_t paging_vaddr2paddr(uint32_t vaddr)
+{
+    uint32_t *pd, *pt;
+    uint_fast16_t pd_idx = vaddr >> 22;
+    uint_fast32_t pt_idx = vaddr >> 12 & 0x3ff;
+
+    pd = (uint32_t *) 0xfffff000;
+    if (!(pd[pd_idx] & 1))
+        return 0; // last page directory entry not present
+
+    pt = (uint32_t *) ((uint8_t *) 0xffc00000 + 0x1000 * pd_idx);
+    if (!(pt[pt_idx] & 1))
+        return 0; // page table entry not present
+        
+    return (uint32_t) ((pt[pt_idx] & ~0xfff) | (vaddr & 0xfff));    
 }

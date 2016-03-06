@@ -76,6 +76,15 @@ static inline void _load(page_dir_entry_t *page_dir_paddr)
                  );
 }
 
+// map the last page directory table entry to the page directory itself
+int page_dir_automap(void)
+{
+    if (page_dir_set_entry(PAGE_DIR_TABLE_LEN-1, (uint32_t) &_[0]))
+        return 1;
+
+    return 0;
+}
+
 void page_dir_init(void)
 {
     size_t i;
