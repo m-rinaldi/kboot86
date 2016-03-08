@@ -109,15 +109,21 @@ int paging_map(uint32_t vaddr, uint32_t paddr)
 // the page directory may be other than the local structure
 uint32_t paging_vaddr2paddr(uint32_t vaddr)
 {
+    /*
+        vaddr  = < pd_idx, pt_idx, phy >
+        
+        from the given vaddr we build another vaddr consisiting of:
+        vaddr' = < 0xffc,  pd_idx, pt_idx >
+    */
     uint32_t *pd, *pt;
     uint_fast16_t pd_idx = vaddr >> 22;
-    uint_fast32_t pt_idx = vaddr >> 12 & 0x3ff;
+    uint_fast16_t pt_idx = vaddr >> 12 & 0x3ff;
 
-    pd = (uint32_t *) 0xfffff000;
+    pd = (uint32_t *) (0xffc00000 | 0x3ff << 12);
     if (!(pd[pd_idx] & 1))
-        return 0; // last page directory entry not present
+        return 0; // corresponding page directory entry not present
 
-    pt = (uint32_t *) ((uint8_t *) 0xffc00000 + 0x1000 * pd_idx);
+    pt = (uint32_t *) (0xffc00000 | (uint32_t) pd_idx << 12);
     if (!(pt[pt_idx] & 1))
         return 0; // page table entry not present
         
