@@ -72,6 +72,11 @@ void main(void)
         kprintf("jmp addr: %x\n", jmp_addr);
         kprintf("vaddr: %x => paddr: %x\n",
                 jmp_addr, paging_vaddr2paddr(jmp_addr));
+
+        /* TODO when the IDT is moved, so that interrupts can be triggered
+        if (paging_unmap(0))
+            goto error;
+        */
         jmp(jmp_addr);
     }
 

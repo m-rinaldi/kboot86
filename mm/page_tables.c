@@ -90,7 +90,7 @@ int page_tables_set_entry(uint_fast16_t table_idx, uint_fast16_t entry_num,
     page_table_entry_t *pte;
 
     if (!_is_4k_aligned_addr(paddr))
-        return 1;   // not 4kB aligned addr
+        return 1;   // not page-aligned addr
 
     if (!_is_table_idx_implemented(table_idx))
         return 1;
@@ -107,3 +107,17 @@ int page_tables_set_entry(uint_fast16_t table_idx, uint_fast16_t entry_num,
     return 0;
 }
 
+int page_tables_clear_entry(uint_fast16_t table_idx, uint_fast16_t entry_num)
+{
+    uint_fast16_t array_idx;
+    page_table_entry_t *pte;
+
+    if (!_is_table_idx_implemented(table_idx))
+        return 1;
+    
+    array_idx = _table_idx2array_idx(table_idx);
+    pte = &_[array_idx][entry_num];
+    _init_entry(pte);
+
+    return 0;
+}

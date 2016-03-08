@@ -66,6 +66,30 @@ static inline void _reset_mmu_cache(void)
         );
 }
 
+int paging_unmap(uint32_t vaddr)
+{
+    uint_fast16_t pd_idx;
+    uint_fast16_t pt_idx;
+
+    if (!_is_4k_aligned_addr(vaddr))
+        return 1;
+    
+    // localize the entry in the page directory
+    pd_idx = _vaddr2pd_idx(vaddr);
+
+    // localize the entry in the pointed page table
+    pt_idx = _vaddr2pt_idx(vaddr);
+    
+    if (!page_dir_entry_is_present(pd_idx))
+        return 0;
+    
+    if (page_tables_clear_entry(pd_idx, pt_idx))
+        return 1;
+
+    _reset_mmu_cache();
+    return 0;
+}
+
 int paging_map(uint32_t vaddr, uint32_t paddr)
 {
     uint_fast16_t pd_idx;
