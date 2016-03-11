@@ -24,7 +24,7 @@ void main(void)
     intr_disable();
 
     pic_init();
-    idt_init(0);
+    idt_init(0x1000);
 
     if (pit_init())
         goto error;
@@ -66,17 +66,17 @@ void main(void)
         }
 
         if (!(jmp_addr = elf32_map(_mem_load_addr))) {
-            kprintf("error while mapping the ELF image\n");
+            kprintf("error while mapping ELF image: %s\n", elf32_strerror());
             goto error;
         }
         kprintf("jmp addr: %x\n", jmp_addr);
         kprintf("vaddr: %x => paddr: %x\n",
                 jmp_addr, paging_vaddr2paddr(jmp_addr));
 
-        /* TODO when the IDT is moved, so that interrupts can be triggered
+        // first page of the address space will not be mapped
         if (paging_unmap(0))
             goto error;
-        */
+
         jmp(jmp_addr);
     }
 

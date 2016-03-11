@@ -30,7 +30,7 @@ typedef struct {
 
 bool elf32_is_supported(const elf32_ehdr_t *hdr);
 uintptr_t elf32_map(const void *);
-const char *elf32_get_strerror(void);
+const char *elf32_strerror(void);
 
 // TODO change "cost void *" to "elf32_ehdr_t *"
 void elf32_display(const void *);
