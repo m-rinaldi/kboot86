@@ -4,6 +4,10 @@
 #include <console.h>
 #include <kstdio.h>
 #include <intr.h>
+#include <pic.h>
+#include <idt.h>
+#include <keyboard.h>
+#include <shell.h>
 
 #define VGA_MEM_ADDR    0xb8000
 #define COLS            80
@@ -36,22 +40,23 @@ void kmain(void)
     //bsod();
 
     intr_disable();
-
-    console_init();
-    kprintf("Hello World!\n");
-    while (1)
-        ;
-
-#if 0
+    
+    idt_init();
     pic_init();
 
-    // TODO change interface and storing of the IDT
-    idt_init(0x1000);
-    
     console_init();
     if (keyboard_init())
         goto error;
-#endif
 
+    kprintf("kernel86\n");
+
+    intr_enable();
+
+    shell_do();
+
+error:
+    kprintf("error");
+    while (1)
+        ;
     
 }

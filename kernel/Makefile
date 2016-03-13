@@ -1,7 +1,7 @@
 CC = ~/opt/cross/bin/i686-elf-gcc
 LD = ~/opt/cross/bin/i686-elf-ld
 AS = ~/opt/cross/bin/i686-elf-as
-CFLAGS = -c -ffreestanding -O2 -Wall -Wextra
+CFLAGS = -c -ffreestanding -Wall -Wextra
 INCLUDES = include/
 
 export CC
@@ -13,8 +13,8 @@ export LD
 
 all: kernel.elf
 
-kernel.elf : startup.o kmain.o drivers/drivers.o lib/lib.o
-	$(LD) kmain.o drivers/drivers.o lib/lib.o -T kernel.ld
+kernel.elf : startup.o kmain.o drivers/drivers.o lib/lib.o shell.o
+	$(LD) kmain.o shell.o drivers/drivers.o lib/lib.o -T kernel.ld
 	./update_hdd.sh
 
 %.o : %.c 
