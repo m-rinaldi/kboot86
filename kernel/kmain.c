@@ -1,6 +1,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <console.h>
+#include <kstdio.h>
+#include <intr.h>
+
 #define VGA_MEM_ADDR    0xb8000
 #define COLS            80
 #define ROWS            25
@@ -29,5 +33,25 @@ void bsod(void)
 
 void kmain(void)
 {
-    bsod();
+    //bsod();
+
+    intr_disable();
+
+    console_init();
+    kprintf("Hello World!\n");
+    while (1)
+        ;
+
+#if 0
+    pic_init();
+
+    // TODO change interface and storing of the IDT
+    idt_init(0x1000);
+    
+    console_init();
+    if (keyboard_init())
+        goto error;
+#endif
+
+    
 }
