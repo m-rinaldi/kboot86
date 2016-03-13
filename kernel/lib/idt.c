@@ -11,11 +11,6 @@
 #define IDT_CS              0x0008
 #define IDT_NUM_GATES_MAX   0x100
 
-// mapping of the IDTR processor register
-typedef struct {
-    uint16_t    limit;      // length of the IDT in bytes - 1
-    uint32_t    base;       // linear address where the IDT starts (INT 0)
-} __attribute__((packed)) idtr_t;
 
 typedef struct {
     unsigned int    gate_type   : 4;
@@ -42,10 +37,16 @@ typedef struct {
 
 
 typedef struct {
-    idt_gate_t gate[256];
+    idt_gate_t  gate[256];
 } __attribute__((packed)) idt_t;
 
-static volatile idt_t *_;
+// mapping of the IDTR processor register
+typedef struct {
+    uint16_t    limit;      // length of the IDT in bytes - 1
+    uint32_t    base;       // linear address where the IDT starts (INT 0)
+} __attribute__((packed)) idtr_t;
+
+static volatile idt_t _ __attribute__((aligned(8)));
 
 #define GATE_TRAP   0
 #define GATE_INTR   1
@@ -90,7 +91,7 @@ int _set_gate(unsigned int index,
     gate.attr.s     = 0;
 
     // place the gate in the IDT
-    _->gate[index] = gate;    
+    _.gate[index] = gate;    
 
     return 0;
 }
@@ -139,7 +140,7 @@ void _set_idtr(idtr_t idtr)
         ); 
 }
 
-int idt_init(uint32_t base)
+int idt_init(void)
 {
     idtr_t  idtr;
     bool IF;
@@ -149,10 +150,8 @@ int idt_init(uint32_t base)
     // disable IF in FLAGS
     intr_disable();
 
-    idtr.base = base;
+    idtr.base = (uint32_t) &_;
     idtr.limit = IDT_NUM_GATES_MAX * sizeof(idt_gate_t) - 1;
-
-    _ = (idt_t *) base;
 
     // set up the whole IDT with default entries
     {
