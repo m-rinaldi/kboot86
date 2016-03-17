@@ -29,14 +29,20 @@ void _clear_bit(uint32_t *bitmap, unsigned int bit_num)
     *bitmap &= ~(1 << bit_num);
 }
 
+static inline
+bool _is_bit_set(uint32_t bitmap, unsigned int bit_num)
+{
+    return !!(bitmap & (1 << bit_num));
+}
+
 // get the index of least significant bit that is cleared
 static inline
 unsigned int _get_clear_bit_num(uint32_t bitmap)
 {
     unsigned int i;
-
-    for (i = 0; i < 8 * sizeof(bitmap); i++, bitmap >>= 1)
-        if (!(bitmap & 1))
+    
+    for (i = 0; i < 8 * sizeof(bitmap); i++)
+        if (!_is_bit_set(bitmap, i))
             return i;
 
     return ~0;
@@ -91,9 +97,21 @@ int frame_dealloc(uint32_t paddr)
 {
     unsigned int i, j;
 
+    // TODO use the function _is_page_aligned_addr()
+    // page-aligned address?
+    if (paddr & 0x3ff)
+        return 1;
+
     if (_paddr2idx(paddr, &i, &j))
         return 1;
 
+    if (i >= LEN)
+        return 1;
+
+    if (!_is_bit_set(_[i], j))
+        return 1; 
+
+    // mark frame as unused
     _clear_bit(_ + i, j);
 
     return 0;
