@@ -6,6 +6,7 @@
 
 // XXX it affects the cursor as well
 #define ATTR_GREEN_ON_BLACK     0x0a
+#define ATTR_WHITE_ON_BLUE      0x1f
 
 static volatile uint16_t * const _mem = (uint16_t *) BASE_ADDR;
     
@@ -69,8 +70,19 @@ void vga_clear(void)
 {
     unsigned int y;
 
-    // TODO  check that the whole screen is being written by changing the
-    //       background color
     for (y = 0; y < VGA_NUM_ROWS; y++)
         vga_clear_row(y);
+}
+
+// Blue Screen of Death
+void vga_bsod(void)
+{
+    unsigned int i, j;
+    unsigned int idx;
+
+    for (i = 0; i < VGA_NUM_COLS; i++)
+        for (j = 0; j < VGA_NUM_ROWS; j++) {
+            idx = _xy2idx(i, j);
+            _mem[idx] = _encode_char_attr(_mem[idx] & 0xff, ATTR_WHITE_ON_BLUE);
+        }
 }
