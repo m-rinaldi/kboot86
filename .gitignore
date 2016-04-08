@@ -1,0 +1,8 @@
+*.o
+*.swp
+*.pad
+*.img
+*.bin
+*.elf
+a.out
+TODO
