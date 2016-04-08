@@ -208,24 +208,31 @@ int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
     filesz = phdr->p_filesz;
     memsz  = phdr->p_memsz;
 
-    if ((uintptr_t) dst % PAGE_SIZE)
-        return 1;   // starting addr not page aligned
+    if ((uintptr_t) dst % PAGE_SIZE) {
+        _str_error = "starting addres is not page aligned";
+        return 1;
+    }
 
     // copy in memory the contents of the ELF that were in the file
     for (; filesz; filesz--, memsz--, paddr++) {
         if (!((uintptr_t) dst % PAGE_SIZE))
-            if (paging_map((uintptr_t) dst, paddr))
+            if (paging_map((uintptr_t) dst, paddr)) {
+                _str_error = "mapping a in-image-present failed";
                 return 1;
+            }
 
         // copy the contents
         *dst++ = *src++;
     }
 
     // set to zero the rest of the bytes not present in the ELF image
-    for (; memsz; memsz--) {
+    for (; memsz; memsz--, paddr++) {
         if (!((uintptr_t) dst % PAGE_SIZE))
-            if (paging_map((uintptr_t) dst, paddr))
+            if (paging_map((uintptr_t) dst, paddr)) {
+                _str_error = "mapping of a to-be-zeroed page failed";
                 return 1;
+            }
+
         *dst++ = 0;
     }
 
