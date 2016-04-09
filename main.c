@@ -11,6 +11,7 @@
 #include <elf32.h>
 #include <jmp.h>
 #include <paging.h>
+#include <vga.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
@@ -39,6 +40,10 @@ void main(void)
 
 
     intr_enable();
+
+    // XXX
+    vga_bsod();
+    console_puts_err("this should be displayed just like an error\n");
 
     kprintf("initializing paging...");
     if (paging_init())

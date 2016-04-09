@@ -7,10 +7,11 @@
 #include <string.h>
 
 // attributes
-#define ATTR_BLACK_ON_BLACK      0x00
-#define ATTR_LGREY_ON_BLACK      0x07
-#define ATTR_GREEN_ON_BLACK      0x0a
-#define ATTR_WHITE_ON_BLUE       0x1f
+#define ATTR_BLACK_ON_BLACK     0x00
+#define ATTR_LGREY_ON_BLACK     0x07
+#define ATTR_GREEN_ON_BLACK     0x0a
+#define ATTR_WHITE_ON_BLUE      0x1f
+#define ATTR_RED_ON_BLUE        0x14    
 
 #define IBUF_SIZE   128
 static struct {
@@ -102,12 +103,6 @@ void _putc_attr(char c, uint8_t attr)
 
     // update cursor 
     _curs_forward();
-
-//XXX
-#if 0
-    if (VGA_NUM_COLS == ++_.curs_x)
-        _line_feed();
-#endif
 }
 
 // returns zero if char must not be echoed on the screen
@@ -162,6 +157,22 @@ int console_puts(const char *s)
     vga_draw_cursor_xy(_.curs_x, _.curs_y);
 
     return i;
+}
+
+int console_puts_err(const char *s)
+{
+    uint8_t saved_attr;
+    int ret;
+
+    saved_attr = _.attr;
+
+    _.attr = ATTR_RED_ON_BLUE;
+    ret = console_puts(s);
+
+    // restore attr
+    _.attr = saved_attr;
+
+    return ret;
 }
 
 // called from keyboard ISR
