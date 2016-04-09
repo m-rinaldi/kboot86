@@ -24,7 +24,7 @@ void main(void)
     intr_disable();
 
     pic_init();
-    idt_init(0x1000);
+    idt_init();
 
     if (pit_init())
         goto error;
@@ -37,14 +37,22 @@ void main(void)
     
     kprintf("kboot86\n");
 
+
     intr_enable();
 
     kprintf("initializing paging...");
     if (paging_init())
         goto error;
     kprintf("ok\n");
+        
+    // first page of the address space will not be mapped
+    if (paging_unmap(0))
+        goto error;
     
     paging_enable();
+
+*((volatile uint8_t *) 0) = 113;
+    
 
     if (hdd_init() || fat16_init(0))
         goto error;
@@ -73,9 +81,6 @@ void main(void)
         kprintf("vaddr: %x => paddr: %x\n",
                 jmp_addr, paging_vaddr2paddr(jmp_addr));
 
-        // first page of the address space will not be mapped
-        if (paging_unmap(0))
-            goto error;
 
         jmp(jmp_addr);
     }

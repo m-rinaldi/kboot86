@@ -29,4 +29,4 @@ page_fault:
 page_fault_loop:
     jmp     page_fault_loop
 page_fault_msg:
-    .asciz "from page fault exception handler!"
+    .asciz "page fault exception"

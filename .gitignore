@@ -4,5 +4,6 @@
 *.img
 *.bin
 *.elf
+*.log
 a.out
 TODO
