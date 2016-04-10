@@ -10,18 +10,30 @@
 static char _buf[BUF_SIZE];
 
 
-int kprintf(const char *fmt, ...)
+int kprintf(const char *format, ...)
 {
 	va_list args;
 	int i;
 
-	va_start(args, fmt);
-	i = kvsprintf(_buf,fmt,args);
+	va_start(args, format);
+	i = kvsprintf(_buf, format, args);
 	va_end(args);
 
     console_puts(_buf);
 
 	return i;
+}
+
+int ksprintf(char *str, const char *format, ...)
+{
+    va_list args;
+    int i;
+
+    va_start(args, format);
+    i = kvsprintf(str, format, args);
+    va_end(args);
+
+    return i;
 }
 
 /* we use this so that we can do without the ctype library */
