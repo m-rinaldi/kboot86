@@ -2,11 +2,13 @@
  * IDT: Interrupt Description Table
  */
 #include <idt.h>
-#include <isr.h>
-#include <intr.h>
-#include <eflags.h>
+
 #include <stddef.h>
 #include <stdint.h>
+
+#include <intr.h>
+#include <eflags.h>
+#include <faults.h>
 
 #define IDT_CS              0x0008
 #define IDT_NUM_GATES_MAX   0x100
@@ -157,7 +159,14 @@ int idt_init(void)
     {
         int i;
         for (i = 0; i < IDT_NUM_GATES_MAX; i++)
-            ; // TODO
+            idt_set_intr_gate(i, (void (*)(void)) NULL);
+    }
+
+    // set up common handler for hardware exceptions
+    {
+        int i;
+        for (i = 0; i < 32; i++)
+            idt_set_intr_gate(i, exception_handler);
     }
 
     // XXX
@@ -165,14 +174,6 @@ int idt_init(void)
         extern void dummy_isr(void);
         idt_set_intr_gate(33, dummy_isr);
     }
-
-    // XXX
-    {
-        extern void page_fault(void);
-        idt_set_intr_gate(14, page_fault);
-    }
-
-    // TODO
 
     _set_idtr(idtr);
 

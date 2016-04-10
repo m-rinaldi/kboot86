@@ -11,4 +11,4 @@ void vga_writec_attr_xy(char c, uint8_t attr, unsigned int x, unsigned int y);
 void vga_draw_cursor_xy(unsigned int x, unsigned int y);
 void vga_clear_row(unsigned int y);
 void vga_scroll_down(void);
-void vga_bsod(void);
+void vga_set_bsod(void);

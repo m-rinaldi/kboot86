@@ -75,7 +75,7 @@ void vga_clear(void)
 }
 
 // Blue Screen of Death
-void vga_bsod(void)
+void vga_set_bsod(void)
 {
     unsigned int i, j;
     unsigned int idx;

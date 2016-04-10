@@ -41,10 +41,6 @@ void main(void)
 
     intr_enable();
 
-    // XXX
-    vga_bsod();
-    console_puts_err("this should be displayed just like an error\n");
-
     kprintf("initializing paging...");
     if (paging_init())
         goto error;
@@ -55,9 +51,6 @@ void main(void)
         goto error;
     
     paging_enable();
-
-*((volatile uint8_t *) 0) = 113;
-    
 
     if (hdd_init() || fat16_init(0))
         goto error;
