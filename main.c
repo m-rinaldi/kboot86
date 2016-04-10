@@ -12,6 +12,7 @@
 #include <jmp.h>
 #include <paging.h>
 #include <vga.h>
+#include <shell.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
@@ -72,7 +73,11 @@ void main(void)
         }
 
         if (!(jmp_addr = elf32_map(_mem_load_addr))) {
-            kprintf("error while mapping ELF image: %s\n", elf32_strerror());
+            static char str_error[128];
+            ksprintf(str_error, "error while mapping ELF: %s\n",
+                        elf32_strerror());
+            vga_set_bsod();
+            console_puts_err(str_error);
             goto error;
         }
         kprintf("jmp addr: %x\n", jmp_addr);

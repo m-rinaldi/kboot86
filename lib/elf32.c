@@ -195,6 +195,29 @@ bool elf32_is_supported(const elf32_ehdr_t *ehdr)
 }
 
 static inline
+size_t _progseg_get_memsz(const elf32_phdr_t *phdr)
+{
+    return phdr->p_memsz;
+}
+
+static
+size_t _progsegs_get_memsz(const elf32_ehdr_t *ehdr)
+{
+    unsigned int i;
+    size_t sum_memsz;
+    const elf32_phdr_t *phdr;
+    
+    if (!(phdr = _get_progtab(ehdr)))
+        return 0;
+
+    for (i = 0, sum_memsz = 0; i < ehdr->e_phnum; i++, phdr++)
+        if (_progseg_is_loadable(phdr))
+            sum_memsz += _progseg_get_memsz(phdr);
+
+    return sum_memsz;
+}
+
+static inline
 int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
 {
     uint8_t *dst, *src;
@@ -206,7 +229,7 @@ int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
     src = (uint8_t *) (ehdr_addr + phdr->p_offset);
 
     filesz = phdr->p_filesz;
-    memsz  = phdr->p_memsz;
+    memsz  = _progseg_get_memsz(phdr);
 
     if ((uintptr_t) dst % PAGE_SIZE) {
         _str_error = "starting addres is not page aligned";
@@ -239,6 +262,7 @@ int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
     return 0;
 }
 
+
 // map the elf image and returns the address of the entry point
 uintptr_t elf32_map(const void *elf_image)
 {
@@ -252,6 +276,21 @@ uintptr_t elf32_map(const void *elf_image)
 
     if (!(phdr = _get_progtab(ehdr)))
         return 0;
+
+    {
+// TODO 
+#define MEMSZ_MAX   (1 << 20)
+        static char _dyn_str_error[128];
+        size_t total_memsz;
+
+        if ((total_memsz = _progsegs_get_memsz(ehdr)) > MEMSZ_MAX) {
+            ksprintf(_dyn_str_error,
+                        "required %d bytes, only %d supported",
+                        total_memsz, MEMSZ_MAX);
+            _str_error = _dyn_str_error;
+            return 0;
+        }
+    }
 
     for (i = 0; i < ehdr->e_phnum; i++, phdr++) {
         if (!_progseg_is_loadable(phdr))

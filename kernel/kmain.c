@@ -14,6 +14,8 @@
 #define ROWS            25
 #define ATTR            0x1f    // white on blue
 
+// XXX
+static uint8_t bloater[1 << 20];
 
 static inline unsigned int _xy2idx(unsigned int x, unsigned int y)
 {
