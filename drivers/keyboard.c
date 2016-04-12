@@ -10,7 +10,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
+// XXX
+#include <kstdio.h>
 
 #define KEYBOARD_IRQ_NUM    0x01
 
@@ -66,9 +67,9 @@ void keyboard_isr(void)
     // is this keystroke a make or a break?
     make = !(0x80 & scancode);
 
-    // clear the most significant bit (break bit)
-    scancode = 0x7f & scancode;
-    
+    // clear the break bit
+    scancode &= 0x7f;
+
     switch (scancode) {
         case LCTRL:
             _.ctrl = make;
@@ -90,7 +91,7 @@ void keyboard_isr(void)
         char c;
 
         // map control characters 
-        switch (c = _keymap[scancode]) {
+        switch (c = _keymap[scancode][!!_.shift]) {
             case 'u':
                 if (_.ctrl)
                     c = '\r';   // line kill
@@ -105,8 +106,9 @@ void keyboard_isr(void)
                 c = '\b';       // erase
                 break;
         }
-    
-        console_put_ibuf(c);
+
+        if (c)
+            console_put_ibuf(c);
     }
 
 keyboard_isr_end:
