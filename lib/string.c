@@ -27,6 +27,23 @@ char *strncpy(char *dest, const char *src, size_t n)
     return dest;  
 }
 
+int strcmp(const char *s1, const char *s2)
+{
+    for (; *s1; s1++, s2++) {
+        if (!*s2)
+            return 1;
+
+        if (*s2 > *s1)
+            return -1;
+
+        if (*s1 > *s2)
+            return 1;
+
+    }
+
+    return 0;
+}
+
 int strncmp(const char *s1, const char *s2, size_t n)
 {
     size_t i;
