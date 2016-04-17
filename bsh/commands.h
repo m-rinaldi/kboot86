@@ -52,9 +52,10 @@ int _cmd_help(const token_t *cmd_name)
 static
 int _cmd_halt(void)
 {
-    // TODO replace with inline asm with the halt instruction
-    while (1)
-        ;
+    asm volatile (
+        "# _cmd_halt\n\t"
+        "hlt\n\t"
+    );
     return 0;
 }
 

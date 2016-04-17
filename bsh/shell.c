@@ -106,7 +106,7 @@ void shell_do(void)
     kprintf("welcome to the boot shell\n");
 
     while (1) {
-        kprintf("%", _prompt);
+        kprintf("%s", _prompt);
         len = BUF_SIZE - 1;
 
         if (console_get_line(_buf, &len))

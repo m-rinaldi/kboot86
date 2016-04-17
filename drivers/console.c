@@ -14,6 +14,7 @@
 #define ATTR_RED_ON_BLUE        0x14    
 
 #define IBUF_SIZE   128
+#define TAB_WIDTH   4
 static struct {
     uint8_t             attr;
 
@@ -35,6 +36,16 @@ static void _line_feed(void)
 
         _.curs_y = VGA_NUM_ROWS - 1;
     }
+}
+
+static inline int _putc(char c, bool display);
+
+static void _tab(void)
+{
+    unsigned int i;
+
+    for (i = 0; i < TAB_WIDTH; i++)
+        _putc(' ', true);
 }
 
 static inline
@@ -112,6 +123,10 @@ int _putc(char c, bool display)
     switch (c) {
         case '\n':
             _line_feed();
+            break;
+
+        case '\t':
+            _tab();
             break;
 
         case '\r':
@@ -201,6 +216,7 @@ static int _del_ibuf(void)
 
     _.widx--;
 
+    // TODO del tab
     _curs_backward();
     _putc(' ', true);
     _curs_backward();

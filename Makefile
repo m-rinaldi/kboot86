@@ -68,6 +68,9 @@ lib/lib.o :
 mm/mm.o :
 	@make -C mm/
 
+bsh/bsh.o:
+	@make -C bsh/
+
 test/test.o :
 	@make -C test/
 
@@ -96,5 +99,6 @@ clean:
 	@make -C drivers/ clean
 	@make -C lib/ clean
 	@make -C test/ clean
+	@make -C bsh/ clean
 	@rm -f *.bin *.o *.pad floppy.img *.log
 	@echo done
