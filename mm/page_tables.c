@@ -89,7 +89,7 @@ int page_tables_set_entry(uint_fast16_t table_idx, uint_fast16_t entry_num,
     uint_fast16_t array_idx;
     page_table_entry_t *pte;
 
-    if (!_is_4k_aligned_addr(paddr))
+    if (!_is_addr_page_aligned(paddr))
         return 1;   // not page-aligned addr
 
     if (!_is_table_idx_implemented(table_idx))

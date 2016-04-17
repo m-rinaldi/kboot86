@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <kstdio.h>
 
+#include <mm_common.h>
 #include <paging.h>
 
 #define SHN_UNDEF   0
@@ -84,6 +85,8 @@ enum p_flags {
     PF_W = 2,
     PF_R = 4
 };
+        
+static char _dyn_str_error[128];
 
 // get the first entry of the program header table
 static inline
@@ -217,24 +220,73 @@ size_t _progsegs_get_memsz(const elf32_ehdr_t *ehdr)
     return sum_memsz;
 }
 
+static bool _is_paddr_in_valid_range(uintptr_t paddr, size_t memsz)
+{
+    if (paddr + memsz > KERNEL_PADDR_MAX)
+        return false;
+
+    return true;
+}
+
+static bool _is_vaddr_in_valid_range(uintptr_t vaddr, size_t memsz)
+{
+    if (vaddr + memsz > KERNEL_VADDR_MAX)
+        return false;
+
+    return true;
+}
+
+static bool _valid_progseg(uintptr_t paddr, uintptr_t vaddr, size_t memsz)
+{
+    if (!_is_addr_page_aligned(paddr)) {
+        ksprintf(_dyn_str_error,
+                "starting physical address not page-aligned: %x", paddr);
+        _str_error = _dyn_str_error;
+        return false;
+    }
+
+    if (!_is_addr_page_aligned(vaddr)) {
+        ksprintf(_dyn_str_error,
+                "starting virtual address not page-aligned: %x", vaddr);
+        _str_error = _dyn_str_error;
+        return false;
+    }
+
+    if (!_is_paddr_in_valid_range(paddr, memsz)) {
+        // TODO more expressive, display actual limits
+        ksprintf(_dyn_str_error, "physical address out of range: %x", paddr);
+        _str_error = _dyn_str_error;
+        return false;
+    }
+
+    if (!_is_vaddr_in_valid_range(vaddr, memsz)) {
+        // TODO more expressive, display actual limits
+        ksprintf(_dyn_str_error, "virtual address out of range: %x", vaddr);
+        _str_error = _dyn_str_error;
+        return false;
+    }
+
+    return true;
+}
+
 static inline
 int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
 {
+    uintptr_t paddr, vaddr;
     uint8_t *dst, *src;
-    uintptr_t paddr;
     size_t filesz, memsz;
 
-    paddr = phdr->p_paddr;
-    dst = (uint8_t *) phdr->p_vaddr;
+    paddr = phdr->p_paddr;  // LMA
+    vaddr = phdr->p_vaddr;  // VMA
+
+    dst = (uint8_t *) vaddr;
     src = (uint8_t *) (ehdr_addr + phdr->p_offset);
 
     filesz = phdr->p_filesz;
     memsz  = _progseg_get_memsz(phdr);
 
-    if ((uintptr_t) dst % PAGE_SIZE) {
-        _str_error = "starting addres is not page aligned";
-        return 1;
-    }
+    if (!_valid_progseg(paddr, vaddr, memsz))
+        return 1; 
 
     // copy in memory the contents of the ELF that were in the file
     for (; filesz; filesz--, memsz--, paddr++) {
@@ -278,15 +330,12 @@ uintptr_t elf32_map(const void *elf_image)
         return 0;
 
     {
-// TODO 
-#define MEMSZ_MAX   (1 << 20)
-        static char _dyn_str_error[128];
         size_t total_memsz;
 
-        if ((total_memsz = _progsegs_get_memsz(ehdr)) > MEMSZ_MAX) {
+        if ((total_memsz = _progsegs_get_memsz(ehdr)) > KERNEL_MEMSZ_MAX) {
             ksprintf(_dyn_str_error,
                         "required %d bytes, only %d supported",
-                        total_memsz, MEMSZ_MAX);
+                        total_memsz, KERNEL_MEMSZ_MAX);
             _str_error = _dyn_str_error;
             return 0;
         }

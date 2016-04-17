@@ -46,7 +46,7 @@ int page_dir_set_entry(uint_fast16_t entry_num, uint32_t paddr)
     if (!_entry_num_is_valid(entry_num))
         return 1;
 
-    if (!_is_4k_aligned_addr(paddr))
+    if (!_is_addr_page_aligned(paddr))
         return 1;
 
     _[entry_num].paddr = paddr >> 12;

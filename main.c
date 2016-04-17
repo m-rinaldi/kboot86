@@ -39,7 +39,6 @@ void main(void)
     
     kprintf("kboot86\n");
 
-
     intr_enable();
 
     kprintf("initializing paging...");
@@ -52,6 +51,9 @@ void main(void)
         goto error;
     
     paging_enable();
+
+    // XXX
+    //shell_do();
 
     if (hdd_init() || fat16_init(0))
         goto error;
@@ -84,11 +86,11 @@ void main(void)
         kprintf("vaddr: %x => paddr: %x\n",
                 jmp_addr, paging_vaddr2paddr(jmp_addr));
 
+        // XXX
+        //while (1);
 
         jmp(jmp_addr);
     }
-
-    shell_do();
 
 error:
     kprintf("\n*** ERROR! ***");

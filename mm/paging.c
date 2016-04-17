@@ -71,7 +71,7 @@ int paging_unmap(uint32_t vaddr)
     uint_fast16_t pd_idx;
     uint_fast16_t pt_idx;
 
-    if (!_is_4k_aligned_addr(vaddr))
+    if (!_is_addr_page_aligned(vaddr))
         return 1;
     
     // localize the entry in the page directory
@@ -95,7 +95,7 @@ int paging_map(uint32_t vaddr, uint32_t paddr)
     uint_fast16_t pd_idx;
     uint_fast16_t pt_idx;    
 
-    if (!_is_4k_aligned_addr(vaddr) || !_is_4k_aligned_addr(paddr))
+    if (!_is_addr_page_aligned(vaddr) || !_is_addr_page_aligned(paddr))
         return 1;
 
     // out of for-use-available physical memory
