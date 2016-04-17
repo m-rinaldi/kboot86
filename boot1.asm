@@ -34,6 +34,8 @@ stack_top:
     call bios_print
     add  sp, 2
 
+    ; TODO find out the needed number of tracks to load automatically
+    call load_track
     call load_track
     call load_track
     call load_track
@@ -58,10 +60,11 @@ stack_top:
     xor  si, si
     xor  di, di
     
-    ; TODO make dependent from the number of calls to load_track
-    mov  cx, 27648/2    ; 18kiB to copy
+    ; TODO make independent from the number of calls to load_track
+    ; each track consists of 9kiB
+    mov  cx, 36864/2    ; 18kiB to copy
     cld                 ; direction: increasing addresses
-    rep  movsw
+    rep  movsw          ; 2 bytes copied each time
     
     ; restore DS in order to use the labels here
     mov  ax, cs

@@ -53,7 +53,7 @@ void main(void)
     paging_enable();
 
     // XXX
-    //shell_do();
+    shell_do();
 
     if (hdd_init() || fat16_init(0))
         goto error;
