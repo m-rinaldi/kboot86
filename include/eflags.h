@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-bool eflags_get_IF(void);
-void eflags_set_IF(bool);
+bool eflags_get_intr_flag(void);
+void eflags_set_intr_flag(bool);
 
 #endif // _EFLAGS_H_

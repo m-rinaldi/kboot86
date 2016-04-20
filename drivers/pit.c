@@ -89,11 +89,11 @@ int _set_freq_hz(uint32_t freq_hz)
 
 int pit_init(void)
 {
-    bool IF;
+    bool intr_flag;
     bool ret = false;
 
     // save IF
-    IF = eflags_get_IF();
+    intr_flag = eflags_get_intr_flag();
     intr_disable();
 
     _num_ticks = 0;
@@ -103,7 +103,7 @@ int pit_init(void)
         ret = true;
 
     // restore IF
-    eflags_set_IF(IF);
+    eflags_set_intr_flag(intr_flag);
 
     return ret;
 }

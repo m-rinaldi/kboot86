@@ -64,7 +64,7 @@ void _set(eflags_t eflags)
         );
 }
 
-bool eflags_get_IF(void)
+bool eflags_get_intr_flag(void)
 {
     eflags_t eflags;
 
@@ -72,12 +72,12 @@ bool eflags_get_IF(void)
     return eflags.IF;
 }
 
-void eflags_set_IF(bool IF)
+void eflags_set_intr_flag(bool intr_flag)
 {
     eflags_t eflags;
 
     eflags = _get();
-    eflags.IF = IF;
+    eflags.IF = intr_flag;
     _set(eflags);   
 }
 

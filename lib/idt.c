@@ -145,11 +145,11 @@ void _set_idtr(idtr_t idtr)
 int idt_init(void)
 {
     idtr_t  idtr;
-    bool IF;
+    bool intr_flag;
 
-    // save IF from FLAGS
-    IF = eflags_get_IF();
-    // disable IF in FLAGS
+    // save intr_flag from FLAGS
+    intr_flag = eflags_get_intr_flag();
+    // disable intr_flag in FLAGS
     intr_disable();
 
     idtr.base = (uint32_t) &_;
@@ -177,8 +177,8 @@ int idt_init(void)
 
     _set_idtr(idtr);
 
-    // restore saved IF
-    eflags_set_IF(IF);
+    // restore saved intr_flag
+    eflags_set_intr_flag(intr_flag);
 
     return 0;
 }

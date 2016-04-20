@@ -41,7 +41,7 @@ int keyboard_init(void)
     _.ctrl = false;
     
     // save IF
-    intr_flag = eflags_get_IF();
+    intr_flag = eflags_get_intr_flag();
     intr_disable();
 
     // TODO perform a controller reset
@@ -52,7 +52,7 @@ int keyboard_init(void)
     pic_enable_irq(KEYBOARD_IRQ_NUM);
 
     // restore previous IF
-    eflags_set_IF(intr_flag);
+    eflags_set_intr_flag(intr_flag);
 
     return 0;
 }
