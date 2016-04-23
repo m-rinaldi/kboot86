@@ -1,41 +1,32 @@
-# XXX
-OBJ := drivers/drivers.o lib/lib.o mm/mm.o test/test.o main.o bsh/bsh.o
+CC = ~/opt/cross/bin/i686-elf-gcc
+LD = ~/opt/cross/bin/i686-elf-ld
+AS = ~/opt/cross/bin/i686-elf-as
+CFLAGS = -c -ffreestanding -Wall -Wextra
+INCLUDES = include/
 
-DIRS := lib mm drivers bsh
+OBJ = drivers/drivers.o lib/lib.o mm/mm.o test/test.o main.o bsh/bsh.o
 
-# XXX
-SUBDIRS := drivers lib mm test
+# TODO just include the number of the subdirectories and the rest should be 
+#      done automatically
+SUBDIRS = drivers lib mm test
 
-KBOOT86_SIZE_MAX := $(shell expr 512 '*' 18 '*' 4)
+KBOOT86_SIZE_MAX = $(shell expr 512 '*' 18 '*' 4)
 
 export CC
 export AS
 export CFLAGS
 export LD
 
-TARGET := floppy.img
+.PHONY: all clean
 
-.PHONY: all clean check_image_size
-
-all: $(TARGET) check_image_size
-
-include common.mk
-
-# target-specific variable
-check_image_size: IMAGE_SIZE = $(shell wc -c ${TARGET})
-check_image_size: $(TARGET)
-	@echo 'checking floppy image size...'
-	@echo 'floppy <$(TARGET)> image size: $(IMAGE_SIZE)'
-	@echo 'size OK'
-	# TODO
-	
+all: floppy.img
 
 # TODO check that the floppy image is exactly 1440 kiB in size
 # otherwise show up an error
 
 
 # TODO track4.pad: the track number should be generated automatically
-$(TARGET): boot0.bin boot1.bin floppy.pad track0.pad track4.pad kboot86.bin
+floppy.img : boot0.bin boot1.bin floppy.pad track0.pad track4.pad kboot86.bin
 	@echo -n generating floppy image...
 	@cat boot0.bin boot1.bin track0.pad kboot86.bin track4.pad floppy.pad > floppy.img
 	@echo done
@@ -54,50 +45,50 @@ floppy.pad track0.pad track4.pad : kboot86.bin
 	dd if=/dev/zero of=./floppy.pad bs=512 count=2790 2>/dev/null
 	#@echo done
 
-hdd.img: hdd_sector.bin hdd.pad
+hdd.img : hdd_sector.bin hdd.pad
 	@cat hdd_sector.bin hdd.pad > $@
 
-hdd.pad: 
+hdd.pad : 
 	@dd if=/dev/zero of=./hdd.pad bs=512 \
         count=$$(expr 1024 '*' 4 '*' 16 - 1)
 
-hdd_sector.bin: hdd_sector.asm
+hdd_sector.bin : hdd_sector.asm
 	@nasm $< -f bin -o $@
 
 # TODO include all the object files
-kboot86.bin: _kboot86.o jmp.o $(OBJ)
+kboot86.bin : _kboot86.o jmp.o $(OBJ)
 	@$(LD) -T kboot86.ld -o kboot86.bin _kboot86.o jmp.o $(OBJ)
 
-drivers/drivers.o: 
+drivers/drivers.o : 
 	@make -C drivers/
 
-lib/lib.o:
+lib/lib.o :
 	@make -C lib/
 
-mm/mm.o:
+mm/mm.o :
 	@make -C mm/
 
 bsh/bsh.o:
 	@make -C bsh/
 
-test/test.o:
+test/test.o :
 	@make -C test/
 
-%.o: %.c
+%.o : %.c
 	$(CC) -c $< $(CFLAGS) -I $(INCLUDES) -o $@
 
-%.o: %.S
+%.o : %.S
 	@$(AS) -c $< -o $@ 
     
-#_kboot86.o: _kboot86.S
+#_kboot86.o : _kboot86.S
 #	@$(AS) -c $< -o $@ 
 
-boot1.bin: boot1.asm
+boot1.bin : boot1.asm
 	@echo -n "compiling the 2nd stage bootloader: $<..."
 	@nasm $< -f bin -o $@
 	@echo done
 
-boot0.bin: boot0.asm
+boot0.bin : boot0.asm
 	@echo -n "compiling the 1st stage bootloader: $<..."
 	@nasm $< -f bin -o $@
 	@echo done
