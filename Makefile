@@ -55,7 +55,6 @@ kboot86.bin: boot0.bin boot1.bin track0.pad boot2.bin
 	@cat $^ > '$@'
 	@echo done
 	
-
 %.size: %
 	@echo -n generating '$@...'
 	@wc -c '$<' | cut -f1 -d' ' > '$@'
@@ -88,9 +87,8 @@ hdd_sector.bin: hdd_sector.asm
 
 # TODO check size limit (image is being loaded at the lowest 1MB)
 # TODO include all the object files
-# TODO use automatic variables by changing everything to _boot2.o boot2.ld
-boot2.bin: _kboot86.o jmp.o $(OBJS)
-	@$(LD) -T kboot86.ld -o $@ $^
+boot2.bin: boot2.ld boot2.o jmp.o $(OBJS)
+	$(LD) -T $< -o $@ $(filter-out $<, $^)
 
 drivers/drivers.o: 
 	@make -C drivers/
@@ -112,8 +110,7 @@ test/test.o:
 	@$(COMPILE.c) $(OUTPUT_OPTIION) $<
 	@echo 'done'
 
-# TODO for boot1.asm the file "bootloader.inc" is a requisite
-boot%.bin: boot%.asm
+boot%.bin: boot%.asm bootloader.inc
 	@echo -n 'bootloader stage $*: $<...'
 	@nasm $< -f bin -o $@
 	@echo done
