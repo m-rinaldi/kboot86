@@ -100,5 +100,5 @@ clean:
 	@make -C lib/ clean
 	@make -C test/ clean
 	@make -C bsh/ clean
-	@rm -f *.bin *.o *.pad floppy.img *.log
+	@rm -f *.bin *.o *.pad floppy.img *.log *.size
 	@echo done

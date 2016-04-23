@@ -1,12 +1,25 @@
 # XXX
-OBJ := drivers/drivers.o lib/lib.o mm/mm.o test/test.o main.o bsh/bsh.o
+OBJS := drivers/drivers.o lib/lib.o mm/mm.o test/test.o main.o bsh/bsh.o
 
 DIRS := lib mm drivers bsh
 
 # XXX
 SUBDIRS := drivers lib mm test
 
-KBOOT86_SIZE_MAX := $(shell expr 512 '*' 18 '*' 4)
+# TODO move to a .mk only included by this file
+# image to be built is a 1.44MB floppy
+# C x H x S x sector_size = 80 x 2 x 18 x 512B = 1440kB
+NUM_CYLINDERS       := 80
+NUM_HEADS           := 2
+NUM_TRACKS          := $(shell expr $(NUM_CYLINDERS) '*' $(NUM_HEADS))
+SECTORS_PER_TRACK   := 18
+SECTOR_SIZE         := 512
+TRACK_SIZE          := $(shell expr $(SECTORS_PER_TRACK) '*' $(SECTOR_SIZE))
+FLOPPY_SIZE         := $(shell expr $(NUM_TRACKS) '*' $(TRACK_SIZE))
+
+# XXX
+KBOOT86_SIZE_MAX := $(shell expr $(SECTOR_SIZE) '*' 18 '*' 4)
+
 
 export CC
 export AS
@@ -15,44 +28,53 @@ export LD
 
 TARGET := floppy.img
 
+# TODO change to boot3.bin and do away with the ".bin" suffixes
+
 .PHONY: all clean check_image_size
 
 all: $(TARGET) check_image_size
 
 include common.mk
 
-# target-specific variable
-check_image_size: IMAGE_SIZE = $(shell wc -c ${TARGET})
-check_image_size: $(TARGET)
-	@echo 'checking floppy image size...'
-	@echo 'floppy <$(TARGET)> image size: $(IMAGE_SIZE)'
-	@echo 'size OK'
-	# TODO
-	
+check_image_size: IMAGE_SIZE = $(shell cat ${TARGET}.size)
+check_image_size: $(TARGET).size
+	@echo -n checking floppy image size...
+	@echo floppy <'$(TARGET)'> image size: '$(IMAGE_SIZE)'
+	@test '$(IMAGE_SIZE)' -eq '$(FLOPPY_SIZE)' || (echo; \
+        echo size '$(IMAGE_SIZE)'B, expected '$(FLOPPY_SIZE)'B; exit 1)
+	@echo 'OK'
 
-# TODO check that the floppy image is exactly 1440 kiB in size
-# otherwise show up an error
-
-
-# TODO track4.pad: the track number should be generated automatically
-$(TARGET): boot0.bin boot1.bin floppy.pad track0.pad track4.pad kboot86.bin
-	@echo -n generating floppy image...
-	@cat boot0.bin boot1.bin track0.pad kboot86.bin track4.pad floppy.pad > floppy.img
+# TODO add the target kboot86 as the concatenation of boot0, boot1 and boot2
+$(TARGET): kboot86.bin floppy.pad
+	@echo -n generating '$@'...
+	@cat $^ > '$@'
 	@echo done
 
-# TODO track0.pad will be always generated the same way, create rule just for it
-# TODO track4.pad
-floppy.pad track0.pad track4.pad : kboot86.bin
-	#@echo -n "generating the padding for 1st track of the floppy..."
-	dd if=/dev/zero of=./track0.pad bs=512 count=9 2>/dev/null
-	#@echo done
-	#@echo -n "generating the padding for 5th track of the floppy..."
-	dd if=/dev/zero of=./track4.pad bs=1 count=$$(expr ${KBOOT86_SIZE_MAX} - $$(stat -c %s ./kboot86.bin)) 2>/dev/null
-	#@echo done
-	#@echo -n "generating the padding for the floppy image..."
-	# TODO re-calculate by hand
-	dd if=/dev/zero of=./floppy.pad bs=512 count=2790 2>/dev/null
-	#@echo done
+kboot86.bin: boot0.bin boot1.bin track0.pad boot2.bin
+	@echo -n generating '$@'...
+	@cat $^ > '$@'
+	@echo done
+	
+
+%.size: %
+	@echo -n generating '$@...'
+	@wc -c '$<' | cut -f1 -d' ' > '$@'
+	@echo done
+
+floppy.pad: SIZE            = $(shell cat '$<')
+floppy.pad: PADDING_SIZE    = $(shell expr $(FLOPPY_SIZE) - ${SIZE})
+floppy.pad: kboot86.bin.size
+	@echo -n generating padding for the floppy image...
+	@test $(SIZE) -le $(FLOPPY_SIZE) || exit 1
+	@dd if=/dev/zero of=$@ count=1 bs=$(PADDING_SIZE)
+	@echo done
+
+track0.pad: SIZE            = $(shell expr $$(cat $<) '+' $$(cat ${word 2, $^}))
+track0.pad: PADDING_SIZE    = $(shell expr $(TRACK_SIZE) '-' ${SIZE})
+track0.pad: boot0.bin.size boot1.bin.size
+	@echo -n generating padding for the first track...
+	@dd if=/dev/zero of=$@ count=1 bs=$(PADDING_SIZE)
+	@echo done
 
 hdd.img: hdd_sector.bin hdd.pad
 	@cat hdd_sector.bin hdd.pad > $@
@@ -64,9 +86,11 @@ hdd.pad:
 hdd_sector.bin: hdd_sector.asm
 	@nasm $< -f bin -o $@
 
+# TODO check size limit (image is being loaded at the lowest 1MB)
 # TODO include all the object files
-kboot86.bin: _kboot86.o jmp.o $(OBJ)
-	@$(LD) -T kboot86.ld -o kboot86.bin _kboot86.o jmp.o $(OBJ)
+# TODO use automatic variables by changing everything to _boot2.o boot2.ld
+boot2.bin: _kboot86.o jmp.o $(OBJS)
+	@$(LD) -T kboot86.ld -o $@ $^
 
 drivers/drivers.o: 
 	@make -C drivers/
@@ -84,23 +108,20 @@ test/test.o:
 	@make -C test/
 
 %.o: %.c
-	$(CC) -c $< $(CFLAGS) -I $(INCLUDES) -o $@
+	@echo -n 'compiling $<...'
+	@$(COMPILE.c) $(OUTPUT_OPTIION) $<
+	@echo 'done'
+
+# TODO for boot1.asm the file "bootloader.inc" is a requisite
+boot%.bin: boot%.asm
+	@echo -n 'bootloader stage $*: $<...'
+	@nasm $< -f bin -o $@
+	@echo done
 
 %.o: %.S
-	@$(AS) -c $< -o $@ 
-    
-#_kboot86.o: _kboot86.S
-#	@$(AS) -c $< -o $@ 
-
-boot1.bin: boot1.asm
-	@echo -n "compiling the 2nd stage bootloader: $<..."
-	@nasm $< -f bin -o $@
-	@echo done
-
-boot0.bin: boot0.asm
-	@echo -n "compiling the 1st stage bootloader: $<..."
-	@nasm $< -f bin -o $@
-	@echo done
+	@echo -n 'compiling $<...'
+	@$(COMPILE.s) -o $@ $<
+	@echo 'done'
 
 clean:
 	@echo -n cleaning...
@@ -109,5 +130,5 @@ clean:
 	@make -C lib/ clean
 	@make -C test/ clean
 	@make -C bsh/ clean
-	@rm -f *.bin *.o *.pad floppy.img *.log
+	@rm -f *.bin *.o *.pad floppy.img *.log *.size
 	@echo done
