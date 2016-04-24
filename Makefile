@@ -106,12 +106,29 @@ test/test.o:
 	@make -C test/
 
 %.o: %.c
-	@echo -n 'compiling $<...'
+	@echo -n compiling '$<'...
 	@$(COMPILE.c) $(OUTPUT_OPTIION) $<
 	@echo 'done'
 
-boot%.bin: boot%.asm bootloader.inc
-	@echo -n 'bootloader stage $*: $<...'
+boot_config.inc: CEILING_ADD    := $(shell expr $(TRACK_SIZE) - 1)
+boot_config.inc: SIZE           = $(shell expr $$(cat $(word 2, $^)) + \
+                                  ${CEILING_ADD})
+boot_config.inc: SIZE_IN_TRACKS = $(shell expr $(SIZE) / ${TRACK_SIZE})
+boot_config.inc: gen-boot_config.pl boot2.bin.size
+	@echo -n generating '$@'...
+	@perl $< $(SIZE_IN_TRACKS) > '$@'
+	@echo done
+	
+# TODO desing a single pattern rule for both next rules
+
+boot0.bin: boot0.asm boot.inc bios_print.inc
+	@echo -n 'building 1st stage bootloader: $<...'
+	@nasm $< -f bin -o $@
+	@echo done
+
+# TODO
+boot1.bin: boot1.asm boot.inc bios_print.inc boot_config.inc
+	@echo -n 'building 2nd stage bootloader: $<...'
 	@nasm $< -f bin -o $@
 	@echo done
 

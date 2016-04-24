@@ -5,7 +5,7 @@
 ; TODO use value the BIOS returns in DL (drive number) instead of DRIVE_NUM
 bits 16
 
-%include "bootloader.inc"
+%include "boot.inc"
 
 FIRST_SECTOR2LOAD   equ     2   ; sectors start counting from 1, not 0
 NUM_SECTORS2LOAD    equ     8

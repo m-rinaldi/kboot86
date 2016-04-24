@@ -5,7 +5,8 @@
 
 bits 16
 
-%include "bootloader.inc"
+%include "boot.inc"
+%include "boot_config.inc"
 
 ; for a 1.44MB floppy
 ; C x H x S x sector_size = 80 x 2 x 18 x 512B = 1440kiB
@@ -34,11 +35,11 @@ stack_top:
     call bios_print
     add  sp, 2
 
-    ; TODO find out the needed number of tracks to load automatically
+    mov ecx, NUM_TRACKS_TO_LOAD
+call_load_track_again:
     call load_track
-    call load_track
-    call load_track
-    call load_track
+    dec ecx
+    jnz call_load_track_again
 
     push ok_str
     call bios_print
@@ -59,10 +60,21 @@ stack_top:
     ; set offsets
     xor  si, si
     xor  di, di
+   
+    mov eax, NUM_TRACKS_TO_LOAD
+    shl eax, 1      ; x 2
+    mov ecx, eax    ; ECX <- NUM_TRACKS_TO_LOAD x 2
+
+    mov eax, NUM_TRACKS_TO_LOAD
+    shl eax, 4      ; 16
+    add ecx, eax    ; ECX += NUM_TRACKS_TO_LOAD x 16
+    ; => ECX = NUM_TRACKS_TO_LOAD x (2 + 16)
+    ; ECX contains now the number of sectors to be relocated
     
-    ; TODO make independent from the number of calls to load_track
-    ; each track consists of 9kiB
-    mov  cx, 36864/2    ; 18kiB to copy
+    ; ECX must contain the number of words to be relocated
+    shl ecx, 8      ; x 256
+ 
+    ;mov  cx, 36864/2    ; 18kiB to copy
     cld                 ; direction: increasing addresses
     rep  movsw          ; 2 bytes copied each time
     
@@ -109,6 +121,12 @@ head_num        db  1
 buf_seg         dw  0x1000
 buf_off         dw  0
 load_track:
+    ; save registers
+    push eax
+    push ebx
+    push ecx
+    push edx
+
     mov  ax, [buf_seg]
     mov  es, ax
     mov  bx, [buf_off]
@@ -142,6 +160,12 @@ skip_update_cyl:
     mov  al, 1
     sub  al, [head_num]
     mov  [head_num], al 
+
+    ; restore registers
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
 
     ret
 
