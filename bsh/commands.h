@@ -52,10 +52,12 @@ int _cmd_help(const token_t *cmd_name)
 static
 int _cmd_halt(void)
 {
+#ifndef USERSPACE_HOSTED
     asm volatile (
         "# _cmd_halt\n\t"
         "hlt\n\t"
     );
+#endif
     return 0;
 }
 

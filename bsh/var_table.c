@@ -77,7 +77,6 @@ int var_set_entry(const token_t *var_name, const token_t *val)
     if (!token_is_variable(var_name))
         return 1;
 
-
     if (-1 == (type = _get_variable_token_type(var_name)))
         return 1;
 

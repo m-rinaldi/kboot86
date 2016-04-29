@@ -5,6 +5,10 @@ LD := ~/opt/cross/bin/i686-elf-ld
 AS := ~/opt/cross/bin/i686-elf-as
 
 CPPFLAGS    += -I include/
+ifdef USERSPACE_HOSTED
+  CPPFLAGS += -DUSERSPACE_HOSTED
+endif
+
 CFLAGS      := -c -std=gnu99 -ffreestanding -Wall -Wextra
 
 %.o: %.c

@@ -8,6 +8,10 @@
 #include <console.h>
 #include <kstdio.h>
 
+#ifdef USERSPACE_HOSTED
+#include <stdio.h>
+#endif
+
 #define BUF_SIZE    512     
 static char _buf[BUF_SIZE];
 
@@ -108,10 +112,19 @@ void shell_do(void)
     while (1) {
         kprintf("%s", _prompt);
         len = BUF_SIZE - 1;
+        _buf[0] = '\0';
 
+#ifndef USERSPACE_HOSTED
         if (console_get_line(_buf, &len))
             continue;
         _buf[len] = '\0';
+#else
+        fgets(_buf, len, stdin);
+        _buf[len] = '\0';
+#endif
+
+        // XXX
+        kprintf("read: <%s>\n", _buf); 
 
         if (!(sx = parser_do(_buf))) {
             kprintf("syntax error: ");
