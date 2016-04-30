@@ -13,6 +13,7 @@
 #include <paging.h>
 #include <vga.h>
 #include <shell.h>
+#include <string.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")

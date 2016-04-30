@@ -193,7 +193,7 @@ static token_t _process_variable(void)
     } while (_char_is_alphanum(_cur_char()));
 
     // keep the sigil in the lexeme until the variable is added to the table
-    // it indicates the type of the variable
+    // since it actually contains the information of the type of the variable
     token_set_variable(&token, _.begin, _.forward-1);
 
     return token;
@@ -205,7 +205,7 @@ static token_t _process_string(void)
 
     do {
         _move_forward();
-    } while ('!' != _cur_char());
+    } while (DELIMITER_STR != _cur_char());
 
     // trailing <!>
     _move_forward();
@@ -245,14 +245,13 @@ void lexer_process(void)
             process_token = _process_eoi;
             _.eoi_reached = true;
             break;
-
-        case '$':
-        case '%':
-        case '?':
+        case SIGIL_STR_VAR:
+        case SIGIL_INT_VAR:
+        case SIGIL_BOOL_VAR:
             process_token = _process_variable;
             break;
 
-        case '!':
+        case DELIMITER_STR:
             process_token = _process_string;
             break;
 

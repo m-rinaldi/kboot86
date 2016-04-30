@@ -55,13 +55,13 @@ static inline
 int _get_variable_token_type(const token_t *var_name)
 {
     switch (var_name->_.str[0]) {
-        case '$':
+        case SIGIL_STR_VAR:
             return TYPE_STR;            
 
-        case '%':
+        case SIGIL_INT_VAR:
             return TYPE_INT;            
 
-        case '?':
+        case SIGIL_BOOL_VAR:
             return  TYPE_BOOL;
 
         default:
@@ -92,7 +92,6 @@ int var_set_entry(const token_t *var_name, const token_t *val)
             if (!token_is_luinteger(val))
                 return 1;
             break;
-
     }
    
     // get the variable entry if it exists already in the table

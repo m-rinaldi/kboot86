@@ -8,10 +8,6 @@
 #include <console.h>
 #include <kstdio.h>
 
-#ifdef USERSPACE_HOSTED
-#include <stdio.h>
-#endif
-
 #define BUF_SIZE    512     
 static char _buf[BUF_SIZE];
 
@@ -99,7 +95,7 @@ int _call_cmd(cmd_func_t cmd_func, unsigned int arity, const token_t *tokens)
 // TODO before calling that function, it will be tested only the arity of
 //      the command
 
-static const char *_prompt = "bsh-> ";
+static const char *_prompt = "shell-> ";
 
 void shell_do(void)
 {
@@ -110,21 +106,14 @@ void shell_do(void)
     kprintf("welcome to the boot shell\n");
 
     while (1) {
-        kprintf("%s", _prompt);
-        len = BUF_SIZE - 1;
         _buf[0] = '\0';
+        len = BUF_SIZE - 1;
 
-#ifndef USERSPACE_HOSTED
+        kprintf("%s", _prompt);
+
         if (console_get_line(_buf, &len))
             continue;
         _buf[len] = '\0';
-#else
-        fgets(_buf, len, stdin);
-        _buf[len] = '\0';
-#endif
-
-        // XXX
-        kprintf("read: <%s>\n", _buf); 
 
         if (!(sx = parser_do(_buf))) {
             kprintf("syntax error: ");
@@ -132,13 +121,10 @@ void shell_do(void)
             continue;
         }
 
-#if 0
-        // XXX
-        for (token_t *token = &sx->syntax_vec[0]; !token_is_eoi(token); token++)
-            token_display(token);
-#endif
+        // blank line
+        if (token_is_eoi(&sx->syntax_vec[0]))
+            continue;
 
-        // TODO what if only space is entered, it displays the following error
         if (!token_is_identifier(&sx->syntax_vec[0])) {
             kprintf("semantic error: ");
             kprintf("first word must be an identifier\n");

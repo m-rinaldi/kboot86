@@ -9,7 +9,8 @@ ifdef USERSPACE_HOSTED
   CPPFLAGS += -DUSERSPACE_HOSTED
 endif
 
-CFLAGS      := -c -std=gnu99 -ffreestanding -Wall -Wextra
+CFLAGS      := -c -std=gnu11 -ffreestanding -nostdlib -Wall -Wextra
+LDPATH      := ../opt/cross/lib/gcc/i686-elf/4.9.3/
 
 %.o: %.c
 	@echo -n 'compiling $<...'

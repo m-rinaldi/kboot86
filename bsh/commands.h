@@ -61,10 +61,13 @@ int _cmd_halt(void)
     return 0;
 }
 
-
+#define FOO "foo"
 #define CMD_set_arity   2
 #define CMD_set_desc    "sets a variable to the given value"
-#define CMD_set_usage   "set $var 113\n\tset %var !hello world!\n\tset ?var"
+#define CMD_set_usage   "set " _SIGIL_INT_VAR "var 113\n\t"                 \
+                        "set " _SIGIL_STR_VAR "var "                        \
+                        _DELIMITER_STR "hello world" _DELIMITER_STR "\n\t"  \
+                        "set " _SIGIL_BOOL_VAR "var 1"
 static
 int _cmd_set(const token_t *var_name, const token_t *value)
 {

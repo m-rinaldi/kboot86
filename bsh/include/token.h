@@ -3,6 +3,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define SIGIL_STR_VAR       '$'
+#define _SIGIL_STR_VAR      "$"
+
+#define SIGIL_INT_VAR       '%'
+#define _SIGIL_INT_VAR      "%"
+
+#define SIGIL_BOOL_VAR      '.'
+#define _SIGIL_BOOL_VAR     "."
+
+#define DELIMITER_STR       '!'
+#define _DELIMITER_STR      "!"
+
 typedef enum {
     VOID = 0,       // on inizialization
     ERROR,

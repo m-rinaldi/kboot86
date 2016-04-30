@@ -87,8 +87,8 @@ hdd_sector.bin: hdd_sector.asm
 
 # TODO check size limit (image is being loaded at the lowest 1MB)
 # TODO include all the object files
-boot2.bin: boot2.ld boot2.o jmp.o $(OBJS)
-	$(LD) -T $< -o $@ $(filter-out $<, $^)
+boot2.bin: boot2.ld boot2.o jmp.o $(OBJS) #-lgcc
+	$(LD) -T $< -o $@ $(filter-out $<, $^) -L $(LDPATH) -lgcc
 
 drivers/drivers.o: 
 	@make -C drivers/
