@@ -130,3 +130,25 @@ int _cmd_vars(void)
 {
     return var_foreach(_display_var);
 }
+
+#include <ata.h>
+#define CMD_ataid_arity   0
+#define CMD_ataid_desc    "displays ATA IDENTIFY command"
+#define CMD_ataid_usage  "ataid"
+static
+int _cmd_ataid(void)
+{
+    ata_display_info();
+    return 0;
+}
+
+#include <hdd.h>
+#define CMD_mbr_arity   0
+#define CMD_mbr_desc    "dsiplays MBR information"
+#define CMD_mbr_usage   "mbr"
+static
+int _cmd_mbr(void)
+{
+    hdd_display_mbr();
+    return 0;
+}

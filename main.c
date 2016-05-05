@@ -48,13 +48,13 @@ void main(void)
     
     paging_enable();
 
-    // XXX
-    shell_do();
-
     if (hdd_init() || fat16_init(0))
         goto error;
+   
+    // XXX 
+    shell_do();
 
-    hdd_display();
+
     fat16_display_vid();
     fat16_display_root();
 

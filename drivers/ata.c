@@ -4,14 +4,9 @@
 #include <io.h>
 #include <stdbool.h>
 #include <string.h>
-
-//XXX
 #include <kstdio.h>
 
-// TODO IDENTIFY
-// TODO read_lba
-
-// Ports for routing the registers
+// ports for routing the registers of the primary ATA bus
 #define DATA        0x1f0 // [r/w]  data register
 #define ERR         0x1f1 // [r]    error register
 #define FEATURES    0x1f1 // [w]    features register
@@ -412,6 +407,7 @@ void ata_display_info(void)
 int ata_init(void)
 {
     _reset();
+
     if (_identify(0))
         return 1;
 

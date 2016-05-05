@@ -59,12 +59,8 @@ int hdd_read_sector(unsigned int pnum, uint32_t rsec_num, ata_sector_t *buf)
     return ata_read_sector_lba(asec_num, buf);
 }
 
-void hdd_display(void)
+void hdd_display_mbr(void)
 {
-    ata_display_info();
-    kprintf("*** MBR ***\n");
     mbr_display();
-    kprintf("***********\n");
 }
-
 
