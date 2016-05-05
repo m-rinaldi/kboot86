@@ -1,6 +1,7 @@
 #include <console.h>
 
 #include <vga.h>
+#include <keyboard.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -93,6 +94,10 @@ int console_init(void)
     _.widx = 0;
 
     console_clear();
+
+    if (keyboard_init())
+        return 1;
+
     return 0;
 }
 

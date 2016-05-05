@@ -3,7 +3,6 @@
 #include <idt.h>
 #include <intr.h>
 #include <pit.h>
-#include <keyboard.h>
 #include <shell.h>
 #include <kstdio.h>
 #include <hdd.h>
@@ -34,10 +33,6 @@ void main(void)
 
     console_init();
 
-    // TODO keyboard belongs to console
-    if (keyboard_init())
-        goto error;
-    
     kprintf("kboot86\n");
 
     intr_enable();
