@@ -1,0 +1,1 @@
+xorriso -as mkisofs -r -b boot/floppy.img -c boot/boot.catalog -o bootcd.iso .
