@@ -46,22 +46,6 @@ int _cmd_help(const token_t *cmd_name)
     return 0; 
 }
 
-#define CMD_halt_arity  0
-#define CMD_halt_desc   "shutdowns the computer"
-#define CMD_halt_usage  "shutdown"
-static
-int _cmd_halt(void)
-{
-#ifndef USERSPACE_HOSTED
-    asm volatile (
-        "# _cmd_halt\n\t"
-        "hlt\n\t"
-    );
-#endif
-    return 0;
-}
-
-#define FOO "foo"
 #define CMD_set_arity   2
 #define CMD_set_desc    "sets a variable to the given value"
 #define CMD_set_usage   "set " _SIGIL_INT_VAR "var 113\n\t"                 \

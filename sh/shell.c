@@ -41,7 +41,6 @@ static void _foreach_cmd_entry(int (*func)(const cmd_table_entry_t *));
 static cmd_table_entry_t _cmd_table[] = {
     ADD_CMD(lscmd)
     ADD_CMD(help)
-    ADD_CMD(halt)
     ADD_CMD(set)
     ADD_CMD(show)
     ADD_CMD(vars)

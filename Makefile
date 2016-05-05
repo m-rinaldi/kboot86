@@ -1,7 +1,7 @@
 # XXX
-OBJS := drivers/drivers.o lib/lib.o mm/mm.o test/test.o main.o bsh/bsh.o
+OBJS := drivers/drivers.o lib/lib.o mm/mm.o test/test.o main.o sh/sh.o
 
-DIRS := lib mm drivers bsh
+DIRS := lib mm drivers sh
 
 # XXX
 SUBDIRS := drivers lib mm test
@@ -99,8 +99,8 @@ lib/lib.o:
 mm/mm.o:
 	@make -C mm/
 
-bsh/bsh.o:
-	@make -C bsh/
+sh/sh.o:
+	@make -C sh/
 
 test/test.o:
 	@make -C test/
@@ -143,6 +143,6 @@ clean:
 	@make -C drivers/ clean
 	@make -C lib/ clean
 	@make -C test/ clean
-	@make -C bsh/ clean
+	@make -C sh/ clean
 	@rm -f *.bin *.o *.pad floppy.img *.log *.size
 	@echo done
