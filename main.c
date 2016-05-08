@@ -50,11 +50,10 @@ void main(void)
 
     if (hdd_init() || fat16_init(0))
         goto error;
-   
-    // XXX 
+
     shell_do();
 
-
+    // TODO implement these functionalities in the boot shell   
     fat16_display_vid();
     fat16_display_root();
 
@@ -82,14 +81,11 @@ void main(void)
         kprintf("vaddr: %x => paddr: %x\n",
                 jmp_addr, paging_vaddr2paddr(jmp_addr));
 
-        // XXX
-        //while (1);
-
         jmp(jmp_addr);
     }
 
 error:
-    kprintf("\n*** ERROR! ***");
-    while (1)
-        ;
+    kprintf("\n*** ERROR! ***\n");
+
+    shell_do();
 }

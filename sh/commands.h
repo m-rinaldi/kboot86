@@ -163,3 +163,13 @@ int _cmd_vid(void)
     fat16_display_vid();
     return 0;
 }
+
+#define CMD_ls_arity    0
+#define CMD_ls_desc     "list FAT16 root's directory"
+#define CMD_ls_usage    "ls"
+static
+int _cmd_ls(void)
+{
+    fat16_display_root();
+    return 0;
+}
