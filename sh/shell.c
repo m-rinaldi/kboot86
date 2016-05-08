@@ -46,6 +46,7 @@ static cmd_table_entry_t _cmd_table[] = {
     ADD_CMD(vars)
     ADD_CMD(ataid)
     ADD_CMD(mbr)
+    ADD_CMD(vid)
 };
 static const size_t _cmd_table_len = sizeof(_cmd_table) / sizeof(_cmd_table[0]);
 

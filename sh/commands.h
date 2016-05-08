@@ -152,3 +152,14 @@ int _cmd_mbr(void)
     hdd_display_mbr();
     return 0;
 }
+
+#include <fat16.h>
+#define CMD_vid_arity   0
+#define CMD_vid_desc    "displays FAT16 Volume ID"
+#define CMD_vid_usage   "vid"
+static
+int _cmd_vid(void)
+{
+    fat16_display_vid();
+    return 0;
+}
