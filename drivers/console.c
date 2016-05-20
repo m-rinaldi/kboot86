@@ -2,6 +2,7 @@
 
 #include <vga.h>
 #include <keyboard.h>
+#include <halt.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -240,31 +241,27 @@ static void _display_ibuf(void)
     vga_draw_cursor_xy(_.curs_x, _.curs_y);
 }
 
-//XXX
-#include <intr.h>
 int console_get_line(char *buf, size_t *buf_len)
 {
     size_t len;
 
-    if (_.cleared) {
+    if (_.cleared) { // screen just cleared
+        // display the already-entered input again
         _display_ibuf();
         _.cleared = false;
     }
 
-    {
-    loop:
-        // TODO do not disable the whole interrupts, only the keyboard
-        // TODO keyboard_disable_irq() instead
-        intr_disable();
-        if (!_.line_completed) {
-            if (_.cleared) {
-                return 1;
-            }
-
-            // TODO keyboard_einable_irq() instead
-            intr_enable();
-            goto loop;
+loop:
+    keyboard_disable_irq();
+    if (!_.line_completed) {
+        if (_.cleared) {
+            keyboard_enable_irq();
+            return 1;   // return the control to get the prompt displayed
         }
+
+        keyboard_enable_irq();
+        halt();
+        goto loop;
     }
 
     // avoid a buffer overrun

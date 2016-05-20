@@ -19,8 +19,6 @@
 #define DATA_REG    0x60
 #define CONTROL_REG 0x64
 
-extern void _keyboard_isr(void);
-
 // keyboard's state
 static struct {
     bool shift, rshift, lshift;
@@ -35,6 +33,7 @@ uint8_t _read_buf(void)
 
 int keyboard_init(void)
 {
+    extern void _keyboard_isr(void);
     bool intr_flag;
 
     _.shift = _.rshift = _.lshift = false;
@@ -48,13 +47,23 @@ int keyboard_init(void)
 
     intr_register_irq(KEYBOARD_IRQ_NUM, _keyboard_isr);
     
-    // enable irq line in the PIC
-    pic_enable_irq(KEYBOARD_IRQ_NUM);
+    pic_send_eoi(KEYBOARD_IRQ_NUM);
+    keyboard_enable_irq();
 
     // restore previous IF
     eflags_set_intr_flag(intr_flag);
 
     return 0;
+}
+
+void keyboard_enable_irq(void)
+{
+    pic_enable_irq(KEYBOARD_IRQ_NUM);
+}
+
+void keyboard_disable_irq(void)
+{
+    pic_disable_irq(KEYBOARD_IRQ_NUM);
 }
 
 void keyboard_isr(void)
@@ -116,4 +125,3 @@ keyboard_isr_end:
     pic_send_eoi(KEYBOARD_IRQ_NUM);
     return;   
 }
-

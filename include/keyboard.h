@@ -1,6 +1,7 @@
-#ifndef _KEYBOARD_H_
-#define _KEYBOARD_H_
+#pragma once
 
 int keyboard_init(void);
+void keyboard_enable_irq(void);
+void keyboard_disable_irq(void);
 
-#endif // _KEYBOARD_H_
+
