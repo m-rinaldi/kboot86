@@ -172,7 +172,40 @@ int idt_init(void)
     // XXX
     {
         extern void dummy_isr(void);
-        idt_set_intr_gate(33, dummy_isr);
+
+        extern void isr32(void);
+        extern void isr33(void);
+        extern void isr34(void);
+        extern void isr35(void);
+        extern void isr36(void);
+        extern void isr37(void);
+        extern void isr38(void);
+        extern void isr39(void);
+        extern void isr40(void);
+        extern void isr41(void);
+        extern void isr42(void);
+        extern void isr43(void);
+        extern void isr44(void);
+        extern void isr45(void);
+        extern void isr46(void);
+        extern void isr47(void);
+
+        idt_set_intr_gate(32, isr32);
+        idt_set_intr_gate(33, isr33);
+        idt_set_intr_gate(34, isr34);
+        idt_set_intr_gate(35, isr35);
+        idt_set_intr_gate(36, isr36);
+        idt_set_intr_gate(37, isr37);
+        idt_set_intr_gate(38, isr38);
+        idt_set_intr_gate(39, isr39);
+        idt_set_intr_gate(40, isr40);
+        idt_set_intr_gate(41, isr41);
+        idt_set_intr_gate(41, isr42);
+        idt_set_intr_gate(43, isr43);
+        idt_set_intr_gate(44, isr44);
+        idt_set_intr_gate(45, isr45);
+        idt_set_intr_gate(46, isr46);
+        idt_set_intr_gate(47, isr47);
     }
 
     _set_idtr(idtr);

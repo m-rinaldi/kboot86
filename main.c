@@ -13,6 +13,7 @@
 #include <vga.h>
 #include <shell.h>
 #include <string.h>
+#include <timer.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
@@ -34,28 +35,71 @@ void main(void)
     console_init();
 
     kprintf("kboot86\n");
-
-    intr_enable();
-
+    
     kprintf("initializing paging...");
     if (paging_init())
         goto error;
-    kprintf("ok\n");
-        
     // first page of the address space will not be mapped
     if (paging_unmap(0))
         goto error;
-    
     paging_enable();
+    kprintf("ok\n");
 
+    // XXX
+    {
+        timer_t point, a, b, c, d;
+        
+        intr_enable();
+        kprintf("starting timers...\n");
+
+#define CNTPOINT    2
+#define CNTA        10
+#define CNTB        20
+#define CNTC        50
+#define CNTD        100
+
+        timer_start(&point, CNTPOINT);
+        timer_start(&a, CNTA);
+        timer_start(&b, CNTB);
+        timer_start(&c, CNTC);
+        timer_start(&d, CNTD);
+        
+        do {
+            if (timer_is_triggered(&point)) {
+                kprintf(".");
+                timer_start(&point, CNTPOINT);
+            }
+
+            if (timer_is_triggered(&a)) {
+                kprintf("a");
+                timer_start(&a, CNTA);
+            }
+
+            if (timer_is_triggered(&b)) {
+                kprintf("b");
+                timer_start(&b, CNTB);
+            }
+    
+            if (timer_is_triggered(&c)) {
+                kprintf("C");
+                timer_start(&c, CNTC);
+            }
+
+            if (timer_is_triggered(&d)) {
+                kprintf("D");
+                timer_start(&d, CNTD);
+            }
+        } while (1);
+    }
+   
+    kprintf("initializing hdd...");
     if (hdd_init() || fat16_init(0))
         goto error;
-
+    kprintf("ok\n");
+    
+    // XXX 
+    intr_enable();
     shell_do();
-
-    // TODO implement these functionalities in the boot shell   
-    fat16_display_vid();
-    fat16_display_root();
 
     {
         int count;
@@ -81,6 +125,7 @@ void main(void)
         kprintf("vaddr: %x => paddr: %x\n",
                 jmp_addr, paging_vaddr2paddr(jmp_addr));
 
+        intr_disable();
         jmp(jmp_addr);
     }
 

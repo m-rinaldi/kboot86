@@ -1,17 +1,16 @@
-/*
-    PIT: Programmable Interval Timer
-    
-    The PIT chip has 3 channes: CH0, CH1 & CH2. 
-    We are only concerned about CH0
- */
+#include <pit.h>
+/*******************************************************************************
+ * Programmable Interval Timer
+ * The PIT chip has 3 channes: CH0, CH1 & CH2. We are only concerned about CH0
+ ******************************************************************************/
+#include <pic.h>
+#include <timers.h>
+
 #include <intr.h>
 #include <io.h>
 #include <eflags.h>
-#include <pic.h>
-#include <string.h>
 
-//XXX
-#include <console.h>
+#include <string.h>
 
 #define PIT_IRQ_NUM 0x00
 
@@ -99,19 +98,24 @@ int pit_init(void)
     _num_ticks = 0;
     intr_register_irq(PIT_IRQ_NUM, _pit_isr);
 
-    if (_set_freq_hz(100))
+    if (_set_freq_hz(40)) // 25ms
         ret = true;
-
+    
     // restore IF
     eflags_set_intr_flag(intr_flag);
+    
+    timers_init();
+
+    pic_send_eoi(PIT_IRQ_NUM);
+    pic_enable_irq(PIT_IRQ_NUM);
 
     return ret;
 }
 
-
 void pit_isr(void)
 {
     _num_ticks++;
+    timers_update();
     pic_send_eoi(PIT_IRQ_NUM);
     return;     
 }

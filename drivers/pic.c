@@ -123,13 +123,17 @@ void pic_init(void)
 {
     pic_disable();
     pic_remap(MASTER_OFFSET, SLAVE_OFFSET);
+
+    for (uint8_t irq_num = 0; irq_num < 16; irq_num++)
+        pic_send_eoi(irq_num);
 }
 
 void pic_enable_irq(uint8_t irq)
 {
     uint8_t imr;
+
     uint8_t (*get_imr)(void);
-    void (*set_imr)(uint8_t);
+    void    (*set_imr)(uint8_t);
 
     if (irq < 8) {
         get_imr = _master_get_imr;
@@ -141,7 +145,7 @@ void pic_enable_irq(uint8_t irq)
     }
 
     imr = get_imr();
-    imr &= ~((uint8_t)1 << irq);
+    imr &= ~((uint8_t) 1 << irq);
     set_imr(imr);
 }
 
@@ -161,7 +165,7 @@ void pic_disable_irq(uint8_t irq)
     }
 
     imr = get_imr();
-    imr |= ((uint8_t)1 << irq);
+    imr |= (uint8_t) 1 << irq;
     set_imr(imr);
 }
 
