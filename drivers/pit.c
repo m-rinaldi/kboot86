@@ -4,7 +4,7 @@
  * The PIT chip has 3 channes: CH0, CH1 & CH2. We are only concerned about CH0
  ******************************************************************************/
 #include <pic.h>
-#include <timers.h>
+#include <timer_list.h>
 
 #include <intr.h>
 #include <io.h>
@@ -104,7 +104,7 @@ int pit_init(void)
     // restore IF
     eflags_set_intr_flag(intr_flag);
     
-    timers_init();
+    timer_list_init();
 
     pic_send_eoi(PIT_IRQ_NUM);
     pic_enable_irq(PIT_IRQ_NUM);
@@ -115,7 +115,7 @@ int pit_init(void)
 void pit_isr(void)
 {
     _num_ticks++;
-    timers_update();
+    timer_list_update();
     pic_send_eoi(PIT_IRQ_NUM);
     return;     
 }

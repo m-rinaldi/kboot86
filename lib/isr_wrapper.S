@@ -25,6 +25,7 @@ msg:
 isr\num:
     pushal
     pushl   $\num
+    subl    $32, (%esp)
     pushl   $str
     call    kprintf
     addl    $8, %esp
@@ -33,7 +34,7 @@ isr\num:
 .endm
 
 str:
-    .asciz "ISR: %02d\n"
+    .asciz "IRQ: %02d\n"
 
 isr 32
 isr 33

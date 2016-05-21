@@ -14,6 +14,7 @@
 #include <shell.h>
 #include <string.h>
 #include <timer.h>
+#include <halt.h>
 
 // TODO replace with a more elegant solution
 //#define intr(n) asm volatile ("int $" #n : : : "cc", "memory")
@@ -67,39 +68,42 @@ void main(void)
         do {
             if (timer_is_triggered(&point)) {
                 kprintf(".");
-                timer_start(&point, CNTPOINT);
+                timer_restart(&point);
             }
 
             if (timer_is_triggered(&a)) {
                 kprintf("a");
-                timer_start(&a, CNTA);
+                timer_restart(&a);
             }
 
             if (timer_is_triggered(&b)) {
                 kprintf("b");
-                timer_start(&b, CNTB);
+                timer_restart(&b);
             }
     
             if (timer_is_triggered(&c)) {
                 kprintf("C");
-                timer_start(&c, CNTC);
+                timer_restart(&c);
             }
 
+            timer_restart(&d);
             if (timer_is_triggered(&d)) {
                 kprintf("D");
-                timer_start(&d, CNTD);
             }
+
+            halt();
         } while (1);
     }
+    
+    // XXX 
+    intr_enable();
+    shell_do();
    
     kprintf("initializing hdd...");
     if (hdd_init() || fat16_init(0))
         goto error;
     kprintf("ok\n");
     
-    // XXX 
-    intr_enable();
-    shell_do();
 
     {
         int count;

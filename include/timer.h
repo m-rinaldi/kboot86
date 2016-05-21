@@ -6,6 +6,7 @@ typedef struct st_timer {
     unsigned int            initial_counter;
 
     volatile unsigned int   counter;
+    volatile bool           in_list;
 
     struct st_timer         *prev;
     struct st_timer         *next;
