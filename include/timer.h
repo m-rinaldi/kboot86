@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 typedef struct st_timer {
-    unsigned int            init_count;
+    unsigned int            initial_counter;
 
     volatile unsigned int   counter;
 

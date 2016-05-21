@@ -1,6 +1,7 @@
 #include <timers.h>
 
 #include <intr.h>
+#include <eflags.h>
 
 #include <stddef.h>
 
@@ -14,10 +15,9 @@ void timers_init(void)
 
 void timers_add_timer(timer_t *tmr)
 {
-    if (timer_is_triggered(tmr))
-        return;
-    
-    // add timer to the head of the list
+    bool intr_flag;
+
+    intr_flag = eflags_get_intr_flag();
     intr_disable();
     { 
         tmr->next = _head;
@@ -25,12 +25,14 @@ void timers_add_timer(timer_t *tmr)
             _head->prev = tmr;
         _head = tmr;
     }
-    intr_enable();
+    eflags_set_intr_flag(intr_flag);
 }
 
 void timers_remove_timer(timer_t *tmr)
 {
-
+    bool intr_flag;
+    
+    intr_flag = eflags_get_intr_flag();
     intr_disable();
     {
         if (tmr->prev)
@@ -42,11 +44,12 @@ void timers_remove_timer(timer_t *tmr)
         if (tmr == _head)
             _head = tmr->next;
     }
-    intr_enable();
+    eflags_set_intr_flag(intr_flag);
 
     tmr->prev = tmr->next = NULL; 
 }
 
+// to be called by the PIT's ISR
 void timers_update(void)
 {
     timer_t *tmr;
