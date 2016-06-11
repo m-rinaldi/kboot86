@@ -23,9 +23,10 @@ uint_fast16_t _vaddr2pt_idx(uint32_t vaddr)
 static int _setup_identity(void)
 {
     uint32_t addr;
+    bool writable = true;
 
     for (addr = 0; addr + PAGE_SIZE-1 <= PADDR_MAX; addr += PAGE_SIZE)
-        if (paging_map(addr, addr))
+        if (paging_map(addr, addr, writable))
             return 1;
 
     return 0;
@@ -36,7 +37,6 @@ int paging_init(void)
     page_dir_init();
     page_tables_init();
 
-    // TODO if paging is already enabled, copy that setup being used
     if (_setup_identity())
         return 1;
 
@@ -46,10 +46,6 @@ int paging_init(void)
 
     return 0;
 }
-
-// TODO implemente this functions to set/get the CR3
-// TODO uint32_t _get_page_dir()
-// TODO uint32_t _set_page_dir()
 
 static inline void _reset_mmu_cache(void)
 {
@@ -88,9 +84,7 @@ int paging_unmap(uint32_t vaddr)
     return 0;
 }
 
-// TODO paging_map_writable()
-// TODO paging_map_rdonly()
-int paging_map(uint32_t vaddr, uint32_t paddr)
+int paging_map(uint32_t vaddr, uint32_t paddr, bool writable)
 {
     uint_fast16_t pd_idx;
     uint_fast16_t pt_idx;    
@@ -113,7 +107,6 @@ int paging_map(uint32_t vaddr, uint32_t paddr)
         uint32_t pt_paddr;
 
         // get the paddr the page table this page dir entry will point at
-        // TODO what if no identity paging?
         if (!(pt_paddr = page_tables_get_paddr(pd_idx)))
             return 1;
         
@@ -121,7 +114,7 @@ int paging_map(uint32_t vaddr, uint32_t paddr)
             return 1;
     }
 
-    if (page_tables_set_entry(pd_idx, pt_idx, paddr))
+    if (page_tables_set_entry(pd_idx, pt_idx, paddr, writable))
         return 1;
 
     _reset_mmu_cache();

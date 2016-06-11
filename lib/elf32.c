@@ -80,7 +80,7 @@ enum p_type {
     // ...
 };
 
-enum p_flags {
+enum p_flags { // rwx, just like in Unix
     PF_X = 1,
     PF_W = 2,
     PF_R = 4
@@ -275,6 +275,7 @@ int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
     uintptr_t paddr, vaddr;
     uint8_t *dst, *src;
     size_t filesz, memsz;
+    bool is_writable;
 
     paddr = phdr->p_paddr;  // LMA
     vaddr = phdr->p_vaddr;  // VMA
@@ -284,6 +285,7 @@ int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
 
     filesz = phdr->p_filesz;
     memsz  = _progseg_get_memsz(phdr);
+    is_writable = _progseg_is_writable(phdr);
 
     if (!_valid_progseg(paddr, vaddr, memsz))
         return 1; 
@@ -291,7 +293,7 @@ int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
     // copy in memory the contents of the ELF that were in the file
     for (; filesz; filesz--, memsz--, paddr++) {
         if (!((uintptr_t) dst % PAGE_SIZE))
-            if (paging_map((uintptr_t) dst, paddr)) {
+            if (paging_map((uintptr_t) dst, paddr, is_writable)) {
                 _str_error = "mapping a in-image-present failed";
                 return 1;
             }
@@ -303,7 +305,7 @@ int _map_progseg(uintptr_t ehdr_addr, const elf32_phdr_t *phdr)
     // set to zero the rest of the bytes not present in the ELF image
     for (; memsz; memsz--, paddr++) {
         if (!((uintptr_t) dst % PAGE_SIZE))
-            if (paging_map((uintptr_t) dst, paddr)) {
+            if (paging_map((uintptr_t) dst, paddr, is_writable)) {
                 _str_error = "mapping of a to-be-zeroed page failed";
                 return 1;
             }

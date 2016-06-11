@@ -1,12 +1,13 @@
 #include <page_tables.h>
 
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 
 #define PAGE_TABLE_LEN  1024
 typedef struct {
     unsigned int    present         :   1;
-    unsigned int    read_write      :   1;
+    unsigned int    write           :   1;
     unsigned int    user            :   1;
     unsigned int    write_through   :   1;
     unsigned int    cache_disabled  :   1;
@@ -84,7 +85,7 @@ uint32_t page_tables_get_paddr(uint_fast16_t table_idx)
 }
 
 int page_tables_set_entry(uint_fast16_t table_idx, uint_fast16_t entry_num, 
-                          uint32_t paddr)
+                          uint32_t paddr, bool writable)
 {
     uint_fast16_t array_idx;
     page_table_entry_t *pte;
@@ -102,10 +103,13 @@ int page_tables_set_entry(uint_fast16_t table_idx, uint_fast16_t entry_num,
     pte->zero = 0;
     pte->cache_disabled = 1;
     pte->user = 0;
+    pte->write = writable;
     pte->present = 1;
 
     return 0;
 }
+
+
 
 int page_tables_clear_entry(uint_fast16_t table_idx, uint_fast16_t entry_num)
 {
