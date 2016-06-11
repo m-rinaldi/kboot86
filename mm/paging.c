@@ -5,8 +5,6 @@
 
 #include <stddef.h>
 
-#define MAX_PADDR   0x00efffff
-
 // XXX
 #include <kstdio.h>
 
@@ -26,7 +24,7 @@ static int _setup_identity(void)
 {
     uint32_t addr;
 
-    for (addr = 0; addr + PAGE_SIZE-1 <= MAX_PADDR; addr += PAGE_SIZE)
+    for (addr = 0; addr + PAGE_SIZE-1 <= PADDR_MAX; addr += PAGE_SIZE)
         if (paging_map(addr, addr))
             return 1;
 
@@ -90,6 +88,8 @@ int paging_unmap(uint32_t vaddr)
     return 0;
 }
 
+// TODO paging_map_writable()
+// TODO paging_map_rdonly()
 int paging_map(uint32_t vaddr, uint32_t paddr)
 {
     uint_fast16_t pd_idx;
@@ -99,7 +99,7 @@ int paging_map(uint32_t vaddr, uint32_t paddr)
         return 1;
 
     // out of for-use-available physical memory
-    if (paddr + PAGE_SIZE-1 > MAX_PADDR)
+    if (paddr + PAGE_SIZE-1 > PADDR_MAX)
         return 1;
 
     // localize the entry in the page directory

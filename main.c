@@ -23,6 +23,17 @@
 #define BUF_SIZE (1 << 20)
 static void *_mem_load_addr = (void *) (2 << 20);
 
+uint32_t cr0_get(void)
+{
+    uint32_t cr0;
+
+    asm volatile (
+                    "movl %%cr0, %0\n\t"
+                    :   "=r" (cr0)
+                 );
+    return cr0;
+}
+
 void main(void)
 {
     intr_disable();
@@ -46,6 +57,15 @@ void main(void)
     paging_enable();
     kprintf("ok\n");
 
+    // XXX
+    {
+        uint32_t cr0;
+
+        cr0 = cr0_get();
+        kprintf("CR0: %08x\n", cr0);
+    }
+
+#if 0
     // XXX
     {
         timer_t point, a, b, c, d;
@@ -94,10 +114,11 @@ void main(void)
             halt();
         } while (1);
     }
+#endif
     
     // XXX 
-    intr_enable();
-    shell_do();
+    //intr_enable();
+    //shell_do();
    
     kprintf("initializing hdd...");
     if (hdd_init() || fat16_init(0))

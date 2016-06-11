@@ -4,12 +4,9 @@
 
 typedef struct {
     unsigned int    present         :   1;
-    unsigned int    zero1           :   3;
-    /*
-        unsigned int    read_write      :   1;
-        unsigned int    user_supervisor :   1;
-        unsigned int    write_through   :   1;
-    */
+    unsigned int    write           :   1;
+    unsigned int    user            :   1;
+    unsigned int    write_through   :   1;
 
     unsigned int    cache_disabled  :   1;
     /*
@@ -20,7 +17,7 @@ typedef struct {
         unsigned int    available       :   3;
     */
 
-    unsigned int    zero0           :   7;
+    unsigned int    zero            :   7;
     unsigned int    paddr           :   20; // page table 4-kB aligned addr
 } __attribute__((packed)) page_dir_entry_t;
 
@@ -41,6 +38,14 @@ page_dir_entry_t page_dir_get_entry(uint_fast16_t entry_num)
     return _[entry_num & 0x3ff]; 
 }
 
+/*
+    all the entries in the page dir are set for:
+        U, the user/supervisor bit to 0 -> supervisor  
+        R, the read/write bit to 1      -> writetable
+
+    later on, in the correspoding page table, the read/write bit will set
+    accordingly of the page being mapped
+*/
 int page_dir_set_entry(uint_fast16_t entry_num, uint32_t paddr)
 {
     if (!_entry_num_is_valid(entry_num))
@@ -50,9 +55,11 @@ int page_dir_set_entry(uint_fast16_t entry_num, uint32_t paddr)
         return 1;
 
     _[entry_num].paddr = paddr >> 12;
-    _[entry_num].zero0 = 0;
+    _[entry_num].zero = 0;
     _[entry_num].cache_disabled = 1;
-    _[entry_num].zero1 = 0;
+    _[entry_num].write = 1;
+    _[entry_num].user = 0;
+    _[entry_num].write_through = 0;
     _[entry_num].present = 1;
 
     return 0;
